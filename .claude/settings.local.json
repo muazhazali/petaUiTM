@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(npx next:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(pnpm lint:*)",
+      "Bash(pnpm build:*)"
     ]
   }
 }

@@ -10,6 +10,8 @@ interface MapComponentProps {
   selectedBuilding: Building | null;
   onBuildingSelect: (building: Building | null) => void;
   routeGeoJSON?: GeoJSON.FeatureCollection | null;
+  fromBuilding?: Building | null;
+  toBuilding?: Building | null;
 }
 
 export default function MapComponent({
@@ -18,9 +20,13 @@ export default function MapComponent({
   selectedBuilding,
   onBuildingSelect,
   routeGeoJSON,
+  fromBuilding,
+  toBuilding,
 }: MapComponentProps) {
   const mapRef = useRef<maplibregl.Map | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const fromMarkerRef = useRef<maplibregl.Marker | null>(null);
+  const toMarkerRef = useRef<maplibregl.Marker | null>(null);
 
   const handleBuildingClick = useCallback(
     (buildingId: string) => {
@@ -200,6 +206,38 @@ export default function MapComponent({
       duration: 800,
     });
   }, [selectedBuilding]);
+
+  // From marker (green)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    fromMarkerRef.current?.remove();
+    fromMarkerRef.current = null;
+    if (fromBuilding) {
+      const el = document.createElement("div");
+      el.className = "w-4 h-4 rounded-full bg-emerald-500 border-2 border-white shadow-lg";
+      fromMarkerRef.current = new maplibregl.Marker({ element: el })
+        .setLngLat([fromBuilding.coords[1], fromBuilding.coords[0]])
+        .addTo(map);
+      map.flyTo({ center: [fromBuilding.coords[1], fromBuilding.coords[0]], zoom: Math.max(map.getZoom(), 16), duration: 600 });
+    }
+  }, [fromBuilding]);
+
+  // To marker (red)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    toMarkerRef.current?.remove();
+    toMarkerRef.current = null;
+    if (toBuilding) {
+      const el = document.createElement("div");
+      el.className = "w-4 h-4 rounded-full bg-red-500 border-2 border-white shadow-lg";
+      toMarkerRef.current = new maplibregl.Marker({ element: el })
+        .setLngLat([toBuilding.coords[1], toBuilding.coords[0]])
+        .addTo(map);
+      map.flyTo({ center: [toBuilding.coords[1], toBuilding.coords[0]], zoom: Math.max(map.getZoom(), 16), duration: 600 });
+    }
+  }, [toBuilding]);
 
   return <div ref={containerRef} className="w-full h-full" />;
 }

@@ -4,12 +4,14 @@ import { Building, Room } from "@/types";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Clock, Layers, Building2, FlaskConical, Users, X } from "lucide-react";
+import { Clock, Layers, Building2, FlaskConical, Users, X, Navigation, MapPin } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface BuildingSheetProps {
   building: Building | null;
   onClose: () => void;
+  onSetFrom?: (building: Building) => void;
+  onSetTo?: (building: Building) => void;
 }
 
 const typeConfig: Record<string, { bg: string; text: string; dot: string }> = {
@@ -19,7 +21,7 @@ const typeConfig: Record<string, { bg: string; text: string; dot: string }> = {
   default: { bg: "bg-gray-50", text: "text-gray-700", dot: "bg-gray-400" },
 };
 
-export default function BuildingSheet({ building, onClose }: BuildingSheetProps) {
+export default function BuildingSheet({ building, onClose, onSetFrom, onSetTo }: BuildingSheetProps) {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [selectedFloor, setSelectedFloor] = useState(1);
 
@@ -76,6 +78,30 @@ export default function BuildingSheet({ building, onClose }: BuildingSheetProps)
                 </button>
               </div>
             </SheetHeader>
+
+            {/* Direction buttons */}
+            {(onSetFrom || onSetTo) && (
+              <div className="flex gap-2 px-5 py-3 border-b border-gray-100">
+                {onSetFrom && (
+                  <button
+                    onClick={() => { onSetFrom(building); }}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-semibold hover:bg-emerald-100 active:scale-95 transition-all"
+                  >
+                    <MapPin className="h-3.5 w-3.5" />
+                    Set as start
+                  </button>
+                )}
+                {onSetTo && (
+                  <button
+                    onClick={() => { onSetTo(building); }}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-indigo-50 text-indigo-700 text-xs font-semibold hover:bg-indigo-100 active:scale-95 transition-all"
+                  >
+                    <Navigation className="h-3.5 w-3.5" />
+                    Set as destination
+                  </button>
+                )}
+              </div>
+            )}
 
             {/* Scrollable content */}
             <div className="flex-1 overflow-y-auto scrollbar-hide px-5 py-4 safe-bottom">
