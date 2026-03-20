@@ -1,19 +1,29 @@
 "use client";
 
-import { useState } from "react";
-import { Building } from "@/types";
+import { useState, useEffect, useRef } from "react";
+import Fuse from "fuse.js";
+import { Building, Room } from "@/types";
 import { RouteInfo } from "@/app/[campus]/CampusMap";
-import { ArrowUpDown, Navigation2, X, MapPin, Flag, Clock, Ruler, Share2, ChevronDown, ChevronUp, CornerDownRight } from "lucide-react";
+import { ArrowUpDown, Navigation2, X, MapPin, Flag, Clock, Ruler, Share2, ChevronDown, ChevronUp, CornerDownRight, Search } from "lucide-react";
 
 interface NavigationPanelProps {
+  buildings: Building[];
   from: Building | null;
   to: Building | null;
   isLoading: boolean;
   routeInfo: RouteInfo | null;
   onSwap: () => void;
+  onSetFrom: (b: Building) => void;
+  onSetTo: (b: Building) => void;
   onClearFrom: () => void;
   onClearTo: () => void;
   onClose: () => void;
+}
+
+interface FuseResult {
+  building: Building;
+  displayName: string;
+  subtitle: string;
 }
 
 function formatDuration(seconds: number): string {
@@ -50,12 +60,146 @@ function formatManeuver(type: string): string {
   return map[type] ?? "Continue";
 }
 
+function WaypointInput({
+  value,
+  placeholder,
+  icon,
+  colorClass,
+  bgClass,
+  borderClass,
+  buildings,
+  onSelect,
+  onClear,
+}: {
+  value: Building | null;
+  placeholder: string;
+  icon: React.ReactNode;
+  colorClass: string;
+  bgClass: string;
+  borderClass: string;
+  buildings: Building[];
+  onSelect: (b: Building) => void;
+  onClear: () => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const [results, setResults] = useState<FuseResult[]>([]);
+  const fuseRef = useRef<Fuse<FuseResult> | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const items: FuseResult[] = buildings.map((b) => ({
+      building: b,
+      displayName: b.name,
+      subtitle: b.shortName,
+    }));
+    fuseRef.current = new Fuse(items, {
+      keys: ["displayName", "subtitle"],
+      threshold: 0.4,
+    });
+  }, [buildings]);
+
+  // sync query with selected value
+  useEffect(() => {
+    if (value) setQuery("");
+  }, [value]);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  function handleChange(v: string) {
+    setQuery(v);
+    setOpen(true);
+    if (!v.trim() || !fuseRef.current) {
+      setResults([]);
+    } else {
+      setResults(fuseRef.current.search(v).slice(0, 6).map((r) => r.item));
+    }
+  }
+
+  function handleSelect(b: Building) {
+    onSelect(b);
+    setQuery("");
+    setResults([]);
+    setOpen(false);
+    inputRef.current?.blur();
+  }
+
+  // If a building is selected, show pill; otherwise show input
+  if (value) {
+    return (
+      <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border ${bgClass} ${borderClass}`}>
+        <span className={`flex-shrink-0 ${colorClass}`}>{icon}</span>
+        <span className={`flex-1 text-sm font-medium truncate text-gray-900`}>{value.name}</span>
+        <button
+          onClick={onClear}
+          className="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full hover:bg-black/10 transition-colors"
+        >
+          <X className="h-3 w-3" aria-hidden="true" />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div ref={containerRef} className="relative">
+      <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border border-dashed bg-gray-50 border-gray-200 focus-within:border-indigo-300 focus-within:bg-white transition-colors`}>
+        <Search className="h-3.5 w-3.5 flex-shrink-0 text-gray-400" aria-hidden="true" />
+        <input
+          ref={inputRef}
+          value={query}
+          onChange={(e) => handleChange(e.target.value)}
+          onFocus={() => setOpen(true)}
+          placeholder={placeholder}
+          className="flex-1 text-sm bg-transparent outline-none placeholder:text-gray-400 text-gray-900 min-w-0"
+        />
+        {query && (
+          <button onClick={() => { setQuery(""); setResults([]); }} className="flex-shrink-0">
+            <X className="h-3 w-3 text-gray-400" aria-hidden="true" />
+          </button>
+        )}
+      </div>
+
+      {open && results.length > 0 && (
+        <div className="absolute top-full mt-1.5 left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-xl z-[60] overflow-hidden">
+          <div className="max-h-48 overflow-y-auto divide-y divide-gray-100/60">
+            {results.map((r, i) => (
+              <button
+                key={i}
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-indigo-50 text-left transition-colors"
+                onMouseDown={(e) => { e.preventDefault(); handleSelect(r.building); }}
+              >
+                <MapPin className="h-3.5 w-3.5 text-indigo-400 flex-shrink-0" aria-hidden="true" />
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-gray-900 truncate">{r.displayName}</p>
+                  <p className="text-[10px] text-gray-400">{r.subtitle}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function NavigationPanel({
+  buildings,
   from,
   to,
   isLoading,
   routeInfo,
   onSwap,
+  onSetFrom,
+  onSetTo,
   onClearFrom,
   onClearTo,
   onClose,
@@ -72,7 +216,7 @@ export default function NavigationPanel({
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-lg w-full overflow-hidden" role="region" aria-label="Directions panel">
+    <div className="bg-white border border-gray-200 rounded-2xl shadow-lg w-full overflow-visible" role="region" aria-label="Directions panel">
       {/* Header */}
       <div className="flex items-center gap-2.5 px-4 pt-3 pb-2">
         <Navigation2 className="h-4 w-4 text-indigo-600 flex-shrink-0" aria-hidden="true" />
@@ -111,43 +255,28 @@ export default function NavigationPanel({
 
         {/* Input rows */}
         <div className="flex-1 flex flex-col gap-1.5 min-w-0">
-          {/* From */}
-          <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border transition-colors ${
-            from ? "bg-emerald-50 border-emerald-200" : "bg-gray-50 border-gray-200 border-dashed"
-          }`}>
-            <MapPin className={`h-3.5 w-3.5 flex-shrink-0 ${from ? "text-emerald-600" : "text-gray-400"}`} aria-hidden="true" />
-            <span className={`flex-1 text-sm font-medium truncate ${from ? "text-gray-900" : "text-gray-400"}`}>
-              {from ? from.name : "Choose start point"}
-            </span>
-            {from && (
-              <button
-                onClick={onClearFrom}
-                aria-label={`Clear start point: ${from.name}`}
-                className="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full hover:bg-emerald-200 active:bg-emerald-300 transition-colors"
-              >
-                <X className="h-3 w-3 text-emerald-700" aria-hidden="true" />
-              </button>
-            )}
-          </div>
-
-          {/* To */}
-          <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border transition-colors ${
-            to ? "bg-rose-50 border-rose-200" : "bg-gray-50 border-gray-200 border-dashed"
-          }`}>
-            <Flag className={`h-3.5 w-3.5 flex-shrink-0 ${to ? "text-rose-600" : "text-gray-400"}`} aria-hidden="true" />
-            <span className={`flex-1 text-sm font-medium truncate ${to ? "text-gray-900" : "text-gray-400"}`}>
-              {to ? to.name : "Choose destination"}
-            </span>
-            {to && (
-              <button
-                onClick={onClearTo}
-                aria-label={`Clear destination: ${to.name}`}
-                className="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full hover:bg-rose-200 active:bg-rose-300 transition-colors"
-              >
-                <X className="h-3 w-3 text-rose-700" aria-hidden="true" />
-              </button>
-            )}
-          </div>
+          <WaypointInput
+            value={from}
+            placeholder="Choose start point…"
+            icon={<MapPin className="h-3.5 w-3.5" />}
+            colorClass="text-emerald-600"
+            bgClass="bg-emerald-50"
+            borderClass="border-emerald-200"
+            buildings={buildings}
+            onSelect={onSetFrom}
+            onClear={onClearFrom}
+          />
+          <WaypointInput
+            value={to}
+            placeholder="Choose destination…"
+            icon={<Flag className="h-3.5 w-3.5" />}
+            colorClass="text-rose-600"
+            bgClass="bg-rose-50"
+            borderClass="border-rose-200"
+            buildings={buildings}
+            onSelect={onSetTo}
+            onClear={onClearTo}
+          />
         </div>
 
         {/* Swap button */}
@@ -221,16 +350,13 @@ export default function NavigationPanel({
               </ol>
             )}
           </>
-        ) : bothSet ? (
-          <div className="flex items-center gap-2 py-2 px-3 rounded-xl bg-emerald-50 border border-emerald-100">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" aria-hidden="true" />
-            <span className="text-xs font-medium text-emerald-700">Route ready — follow the line on the map</span>
-          </div>
         ) : (
           <p className="text-xs text-gray-400 py-1 px-1">
             {!from
-              ? "Tap a building on the map, then choose \u201cSet as start\u201d."
-              : "Now tap another building and choose \u201cSet as destination\u201d."}
+              ? "Search for a start point above."
+              : !to
+              ? "Now search for your destination."
+              : "Calculating route…"}
           </p>
         )}
       </div>

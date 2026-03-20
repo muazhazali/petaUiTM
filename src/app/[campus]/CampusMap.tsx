@@ -229,11 +229,14 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
           <div className="pointer-events-auto flex-1 min-w-0">
             {navMode ? (
               <NavigationPanel
+                buildings={buildings}
                 from={fromBuilding}
                 to={toBuilding}
                 isLoading={routeLoading}
                 routeInfo={routeInfo}
                 onSwap={handleSwap}
+                onSetFrom={(b) => { setFromBuilding(b); syncUrl(b, toBuilding, null, true); }}
+                onSetTo={(b) => { setToBuilding(b); syncUrl(fromBuilding, b, null, true); }}
                 onClearFrom={() => { setFromBuilding(null); syncUrl(null, toBuilding, null, true); setRouteInfo(null); }}
                 onClearTo={() => { setToBuilding(null); syncUrl(fromBuilding, null, null, true); setRouteInfo(null); }}
                 onClose={handleCloseNav}
