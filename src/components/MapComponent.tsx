@@ -41,7 +41,25 @@ export default function MapComponent({
 
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+      style: {
+        version: 8,
+        glyphs: "https://fonts.openmaptiles.org/{fontstack}/{range}.pbf",
+        sources: {
+          "carto-light": {
+            type: "raster",
+            tiles: [
+              "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png",
+              "https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png",
+              "https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png",
+            ],
+            tileSize: 256,
+            attribution: "&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors &copy; <a href='https://carto.com/attributions'>CARTO</a>",
+          },
+        },
+        layers: [
+          { id: "carto-light-layer", type: "raster", source: "carto-light" },
+        ],
+      } as maplibregl.StyleSpecification,
       center: campus.center,
       zoom: campus.zoom,
     });
