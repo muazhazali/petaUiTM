@@ -1,0 +1,71 @@
+{
+  "nodes": [
+    { "id": "entrance-main",  "floor": 1, "x": 200, "y": 480, "label": "Main Entrance" },
+    { "id": "L1-lobby",       "floor": 1, "x": 200, "y": 420, "label": "Ground Floor Lobby" },
+    { "id": "L1-corridor-E",  "floor": 1, "x": 320, "y": 420 },
+    { "id": "L1-corridor-W",  "floor": 1, "x":  80, "y": 420 },
+    { "id": "L1-R101",        "floor": 1, "x": 360, "y": 380, "label": "Bilik Kuliah 101" },
+    { "id": "L1-R102",        "floor": 1, "x": 360, "y": 460, "label": "Bilik Kuliah 102" },
+    { "id": "L1-stairs-A",   "floor": 1, "x":  80, "y": 360, "label": "Stairs A" },
+    { "id": "L1-stairs-B",   "floor": 1, "x": 320, "y": 300, "label": "Stairs B" },
+    { "id": "L1-lift",        "floor": 1, "x": 200, "y": 300, "label": "Lift" },
+
+    { "id": "L2-lobby",       "floor": 2, "x": 200, "y": 420, "label": "Level 2 Lobby" },
+    { "id": "L2-corridor-E",  "floor": 2, "x": 320, "y": 420 },
+    { "id": "L2-corridor-W",  "floor": 2, "x":  80, "y": 420 },
+    { "id": "L2-LAB01",       "floor": 2, "x": 360, "y": 380, "label": "Makmal Komputer 1" },
+    { "id": "L2-LAB02",       "floor": 2, "x": 360, "y": 460, "label": "Makmal Komputer 2" },
+    { "id": "L2-stairs-A",   "floor": 2, "x":  80, "y": 360, "label": "Stairs A" },
+    { "id": "L2-stairs-B",   "floor": 2, "x": 320, "y": 300, "label": "Stairs B" },
+    { "id": "L2-lift",        "floor": 2, "x": 200, "y": 300, "label": "Lift" },
+
+    { "id": "L3-lobby",       "floor": 3, "x": 200, "y": 420, "label": "Level 3 Lobby" },
+    { "id": "L3-corridor-E",  "floor": 3, "x": 320, "y": 420 },
+    { "id": "L3-corridor-W",  "floor": 3, "x":  80, "y": 420 },
+    { "id": "L3-BK01",        "floor": 3, "x": 360, "y": 380, "label": "Bilik Kuliah 301" },
+    { "id": "L3-OFFICE",      "floor": 3, "x":  60, "y": 380, "label": "Pejabat Dekan" },
+    { "id": "L3-stairs-A",   "floor": 3, "x":  80, "y": 360, "label": "Stairs A" },
+    { "id": "L3-stairs-B",   "floor": 3, "x": 320, "y": 300, "label": "Stairs B" },
+    { "id": "L3-lift",        "floor": 3, "x": 200, "y": 300, "label": "Lift" }
+  ],
+  "edges": [
+    { "from": "entrance-main", "to": "L1-lobby",      "weight": 10 },
+    { "from": "L1-lobby",      "to": "L1-corridor-E", "weight": 15 },
+    { "from": "L1-lobby",      "to": "L1-corridor-W", "weight": 15 },
+    { "from": "L1-lobby",      "to": "L1-lift",       "weight": 20 },
+    { "from": "L1-corridor-E", "to": "L1-R101",       "weight":  8 },
+    { "from": "L1-corridor-E", "to": "L1-R102",       "weight":  8 },
+    { "from": "L1-corridor-E", "to": "L1-stairs-B",   "weight": 20 },
+    { "from": "L1-corridor-W", "to": "L1-stairs-A",   "weight": 10 },
+
+    { "from": "L2-lobby",      "to": "L2-corridor-E", "weight": 15 },
+    { "from": "L2-lobby",      "to": "L2-corridor-W", "weight": 15 },
+    { "from": "L2-lobby",      "to": "L2-lift",       "weight": 20 },
+    { "from": "L2-corridor-E", "to": "L2-LAB01",      "weight":  8 },
+    { "from": "L2-corridor-E", "to": "L2-LAB02",      "weight":  8 },
+    { "from": "L2-corridor-E", "to": "L2-stairs-B",   "weight": 20 },
+    { "from": "L2-corridor-W", "to": "L2-stairs-A",   "weight": 10 },
+
+    { "from": "L3-lobby",      "to": "L3-corridor-E", "weight": 15 },
+    { "from": "L3-lobby",      "to": "L3-corridor-W", "weight": 15 },
+    { "from": "L3-lobby",      "to": "L3-lift",       "weight": 20 },
+    { "from": "L3-corridor-E", "to": "L3-BK01",       "weight":  8 },
+    { "from": "L3-corridor-W", "to": "L3-OFFICE",     "weight":  8 },
+    { "from": "L3-corridor-W", "to": "L3-stairs-A",   "weight": 10 },
+    { "from": "L3-corridor-E", "to": "L3-stairs-B",   "weight": 20 },
+
+    { "from": "L1-stairs-A",  "to": "L2-stairs-A",   "weight": 20 },
+    { "from": "L2-stairs-A",  "to": "L3-stairs-A",   "weight": 20 },
+    { "from": "L1-stairs-B",  "to": "L2-stairs-B",   "weight": 20 },
+    { "from": "L2-stairs-B",  "to": "L3-stairs-B",   "weight": 20 },
+    { "from": "L2-stairs-A",  "to": "L2-lobby",      "weight": 10 },
+    { "from": "L3-stairs-A",  "to": "L3-lobby",      "weight": 10 },
+    { "from": "L2-stairs-B",  "to": "L2-lobby",      "weight": 10 },
+    { "from": "L3-stairs-B",  "to": "L3-lobby",      "weight": 10 },
+
+    { "from": "L1-lift",       "to": "L2-lift",       "weight": 15 },
+    { "from": "L2-lift",       "to": "L3-lift",       "weight": 15 },
+    { "from": "L2-lift",       "to": "L2-lobby",      "weight":  5 },
+    { "from": "L3-lift",       "to": "L3-lobby",      "weight":  5 }
+  ]
+}

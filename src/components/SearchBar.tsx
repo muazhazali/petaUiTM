@@ -22,6 +22,7 @@ export default function SearchBar({ buildings, onSelectBuilding }: SearchBarProp
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<FuseResult[]>([]);
   const [open, setOpen] = useState(false);
+  const listboxId = "search-listbox";
   const fuseRef = useRef<Fuse<FuseResult> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -58,15 +59,15 @@ export default function SearchBar({ buildings, onSelectBuilding }: SearchBarProp
     });
   }, [buildings]);
 
-  useEffect(() => {
-    if (!query.trim()) {
+  const handleQueryChange = (value: string) => {
+    setQuery(value);
+    setOpen(true);
+    if (!value.trim() || !fuseRef.current) {
       setResults([]);
-      return;
+    } else {
+      setResults(fuseRef.current.search(value).slice(0, 8).map((r) => r.item));
     }
-    if (fuseRef.current) {
-      setResults(fuseRef.current.search(query).slice(0, 8).map((r) => r.item));
-    }
-  }, [query]);
+  };
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -100,15 +101,13 @@ export default function SearchBar({ buildings, onSelectBuilding }: SearchBarProp
         <input
           ref={inputRef}
           value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setOpen(true);
-          }}
+          onChange={(e) => handleQueryChange(e.target.value)}
           onFocus={() => setOpen(true)}
           placeholder="Search buildings or rooms…"
           aria-label="Search buildings or rooms"
           aria-autocomplete="list"
           aria-expanded={open && results.length > 0}
+          aria-controls={listboxId}
           role="combobox"
           className="w-full h-11 pl-9 pr-9 rounded-xl text-sm font-medium bg-white border border-gray-200 shadow-sm placeholder:text-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:shadow-md transition-all duration-200"
         />
@@ -125,6 +124,7 @@ export default function SearchBar({ buildings, onSelectBuilding }: SearchBarProp
       {open && results.length > 0 && (
         <div
           className="absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden animate-fade-in-up z-50"
+          id={listboxId}
           role="listbox"
           aria-label="Search results"
         >

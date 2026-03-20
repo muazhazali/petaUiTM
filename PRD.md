@@ -154,42 +154,42 @@ Single-page app — all views are state-driven overlays on the map canvas.
 
 ### v0.1 — Map + Buildings
 
-- [ ] MapLibre setup with UiTM Shah Alam campus view
-- [ ] Load `buildings.json`, render GeoJSON polygons
-- [ ] Tap building → info sheet
-- [ ] URL param deep linking
+- [x] MapLibre setup with UiTM Shah Alam campus view
+- [x] Load `buildings.json`, render GeoJSON polygons
+- [x] Tap building → info sheet
+- [x] URL param deep linking
 
 ### v0.2 — Search
 
-- [ ] Fuse.js index over buildings + rooms
-- [ ] Search bar with autocomplete
-- [ ] Select result → pan to building
+- [x] Fuse.js index over buildings + rooms
+- [x] Search bar with autocomplete
+- [x] Select result → pan to building
 
 ### v0.3 — Indoor Floor Plans
 
-- [ ] SVG floor plan viewer component
-- [ ] Floor switcher
-- [ ] Tap room → room info
+- [x] SVG floor plan viewer component (`FloorPlanViewer.tsx`) with pan/zoom and room tap
+- [x] Floor switcher in BuildingSheet (tabs + floor plan tab)
+- [x] Tap room → room info (highlights SVG element, shows name/type/capacity)
 
 ### v0.4 — Navigation
 
-- [ ] Origin/destination picker UI
-- [ ] OSRM outdoor walking route
-- [ ] Indoor A\* pathfinding
-- [ ] Route polyline rendering
+- [x] Origin/destination picker UI (`NavigationPanel.tsx`)
+- [x] OSRM outdoor walking route (polyline rendered on map)
+- [x] Indoor A\* pathfinding (`src/lib/astar.ts`)
+- [x] Route polyline rendering (outdoor via OSRM; indoor graph data in `nav-graph/`)
 
 ### v0.5 — Multi-Campus
 
-- [ ] Campus selector landing page
-- [ ] `campuses.json` with per-campus config
-- [ ] Dynamic routing (`/{campus}/...`)
+- [x] Campus selector landing page (`/`)
+- [x] `campuses.json` with per-campus config
+- [x] Dynamic routing (`/[campus]`)
 - [ ] Add 2–3 branch campuses as proof
 
 ### v0.6 — Polish & Launch
 
-- [ ] Mobile-responsive layout
 - [ ] PWA support (offline map caching)
-- [ ] Contributing guide for data (adding campuses/buildings/rooms)
+- [x] Mobile-responsive layout
+- [x] Contributing guide for data (adding campuses/buildings/rooms)
 - [ ] README + demo deploy
 
 ---

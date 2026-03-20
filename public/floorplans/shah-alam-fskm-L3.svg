@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 520" width="480" height="520" aria-label="FSKM Level 3 Floor Plan">
+  <defs>
+    <style>
+      .room { fill: #f0f4ff; stroke: #6366f1; stroke-width: 1.5; cursor: pointer; transition: fill 0.15s; }
+      .room:hover, .room.selected { fill: #c7d2fe; }
+      .corridor { fill: #f8f9fc; stroke: #d1d5db; stroke-width: 1; }
+      .wall { fill: #e5e7eb; stroke: #9ca3af; stroke-width: 1; }
+      .stair { fill: #fef3c7; stroke: #f59e0b; stroke-width: 1.5; }
+      .lift  { fill: #ede9fe; stroke: #8b5cf6; stroke-width: 1.5; }
+      .office-room { fill: #fdf4ff; stroke: #a855f7; stroke-width: 1.5; cursor: pointer; transition: fill 0.15s; }
+      .office-room:hover, .office-room.selected { fill: #e9d5ff; }
+      .label { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 11px; fill: #374151; text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
+      .sublabel { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 9px; fill: #6b7280; text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
+      .floor-title { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 13px; font-weight: 700; fill: #4f46e5; }
+    </style>
+  </defs>
+
+  <rect x="20" y="20" width="440" height="480" rx="4" fill="#f9fafb" stroke="#9ca3af" stroke-width="2"/>
+  <text x="240" y="45" class="floor-title" text-anchor="middle">FSKM — Level 3</text>
+
+  <!-- Corridors -->
+  <rect x="20" y="390" width="440" height="50" class="corridor"/>
+  <rect x="170" y="60" width="140" height="370" class="corridor"/>
+
+  <!-- Bilik Kuliah 301 (east wing) -->
+  <rect id="room-bk01" x="320" y="70" width="130" height="160" rx="2" class="room" role="button" tabindex="0" aria-label="Bilik Kuliah 301"/>
+  <text x="385" y="143" class="label">Bilik Kuliah</text>
+  <text x="385" y="158" class="label">301</text>
+  <text x="385" y="173" class="sublabel">Cap. 60</text>
+
+  <!-- Dean's Office (west wing) -->
+  <rect id="dean-office" x="30" y="70" width="130" height="120" rx="2" class="office-room" role="button" tabindex="0" aria-label="Pejabat Dekan"/>
+  <text x="95" y="123" class="label">Pejabat</text>
+  <text x="95" y="138" class="label">Dekan</text>
+  <text x="95" y="153" class="sublabel">Cap. 10</text>
+
+  <!-- Admin offices west lower -->
+  <rect x="30" y="200" width="130" height="80" rx="2" class="office-room"/>
+  <text x="95" y="238" class="label">Pejabat Am</text>
+
+  <rect x="30" y="290" width="130" height="90" rx="2" class="wall"/>
+  <text x="95" y="338" class="label">Bilik Mesyuarat</text>
+
+  <!-- East wing lower -->
+  <rect x="320" y="240" width="130" height="140" rx="2" class="wall"/>
+  <text x="385" y="303" class="label">Bilik Kuliah 302</text>
+  <text x="385" y="318" class="sublabel">Cap. 40</text>
+
+  <rect x="320" y="390" width="60" height="50" rx="2" class="wall"/>
+  <text x="350" y="417" class="sublabel">Stor</text>
+
+  <!-- Stairs A -->
+  <rect x="30" y="390" width="60" height="60" rx="2" class="stair"/>
+  <text x="60" y="415" class="sublabel">Stairs</text>
+  <text x="60" y="428" class="sublabel">A</text>
+
+  <!-- Toilets -->
+  <rect x="100" y="390" width="60" height="60" rx="2" class="wall"/>
+  <text x="130" y="425" class="sublabel">WC</text>
+
+  <!-- Stairs B -->
+  <rect x="390" y="390" width="60" height="60" rx="2" class="stair"/>
+  <text x="420" y="415" class="sublabel">Stairs</text>
+  <text x="420" y="428" class="sublabel">B</text>
+
+  <!-- Lift -->
+  <rect x="305" y="390" width="60" height="60" rx="2" class="lift"/>
+  <text x="335" y="415" class="sublabel">Lift</text>
+  <text x="335" y="428" class="sublabel">▲▼</text>
+
+  <g transform="translate(440,75)">
+    <circle cx="0" cy="0" r="16" fill="white" stroke="#d1d5db" stroke-width="1"/>
+    <text x="0" y="-6" style="font-size:9px;fill:#374151;text-anchor:middle;font-weight:700;">N</text>
+    <line x1="0" y1="-12" x2="0" y2="12" stroke="#9ca3af" stroke-width="1"/>
+    <line x1="-12" y1="0" x2="12" y2="0" stroke="#9ca3af" stroke-width="1"/>
+  </g>
+</svg>

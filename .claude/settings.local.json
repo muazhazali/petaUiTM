@@ -5,7 +5,8 @@
       "Bash(cd:*)",
       "Bash(pnpm lint:*)",
       "Bash(pnpm build:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(pnpm exec:*)"
     ]
   }
 }

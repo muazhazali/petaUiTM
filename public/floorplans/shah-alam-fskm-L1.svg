@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 540" width="480" height="540" aria-label="FSKM Level 1 Floor Plan">
+  <defs>
+    <style>
+      .room { fill: #f0f4ff; stroke: #6366f1; stroke-width: 1.5; cursor: pointer; transition: fill 0.15s; }
+      .room:hover, .room.selected { fill: #c7d2fe; }
+      .corridor { fill: #f8f9fc; stroke: #d1d5db; stroke-width: 1; }
+      .wall { fill: #e5e7eb; stroke: #9ca3af; stroke-width: 1; }
+      .stair { fill: #fef3c7; stroke: #f59e0b; stroke-width: 1.5; }
+      .lift  { fill: #ede9fe; stroke: #8b5cf6; stroke-width: 1.5; }
+      .label { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 11px; fill: #374151; text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
+      .sublabel { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 9px; fill: #6b7280; text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
+      .floor-title { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 13px; font-weight: 700; fill: #4f46e5; }
+      .entrance { fill: #d1fae5; stroke: #10b981; stroke-width: 2; }
+    </style>
+  </defs>
+
+  <!-- Building outline -->
+  <rect x="20" y="20" width="440" height="500" rx="4" fill="#f9fafb" stroke="#9ca3af" stroke-width="2"/>
+
+  <!-- Title -->
+  <text x="240" y="45" class="floor-title" text-anchor="middle">FSKM — Level 1 (Ground Floor)</text>
+
+  <!-- Corridor (horizontal spine) -->
+  <rect x="20" y="390" width="440" height="50" class="corridor"/>
+  <!-- Corridor (vertical spine) -->
+  <rect x="170" y="70" width="140" height="370" class="corridor"/>
+
+  <!-- Main entrance -->
+  <rect id="entrance-main" x="170" y="460" width="140" height="60" rx="2" class="entrance"/>
+  <text x="240" y="495" class="label">Main Entrance</text>
+
+  <!-- Room 101 (west wing, lecture hall) -->
+  <rect id="room-101" x="30" y="70" width="130" height="160" rx="2" class="room" role="button" tabindex="0" aria-label="Bilik Kuliah 101"/>
+  <text x="95" y="145" class="label">Bilik Kuliah</text>
+  <text x="95" y="160" class="label">101</text>
+  <text x="95" y="175" class="sublabel">Cap. 120</text>
+
+  <!-- Room 102 (west wing lower) -->
+  <rect id="room-102" x="30" y="240" width="130" height="140" rx="2" class="room" role="button" tabindex="0" aria-label="Bilik Kuliah 102"/>
+  <text x="95" y="305" class="label">Bilik Kuliah</text>
+  <text x="95" y="320" class="label">102</text>
+  <text x="95" y="335" class="sublabel">Cap. 80</text>
+
+  <!-- Stairs A (west) -->
+  <rect x="30" y="390" width="60" height="60" rx="2" class="stair"/>
+  <text x="60" y="415" class="sublabel">Stairs</text>
+  <text x="60" y="428" class="sublabel">A</text>
+
+  <!-- Toilets (west, lower) -->
+  <rect x="100" y="390" width="60" height="60" rx="2" class="wall"/>
+  <text x="130" y="425" class="sublabel">WC</text>
+
+  <!-- East wing rooms -->
+  <rect x="320" y="70" width="130" height="120" rx="2" class="wall"/>
+  <text x="385" y="125" class="label">Makmal</text>
+  <text x="385" y="140" class="sublabel">Penyelidikan</text>
+
+  <rect x="320" y="200" width="130" height="110" rx="2" class="wall"/>
+  <text x="385" y="250" class="label">Pejabat Am</text>
+
+  <rect x="320" y="320" width="130" height="60" rx="2" class="wall"/>
+  <text x="385" y="354" class="label">Stor</text>
+
+  <!-- Stairs B (east top) -->
+  <rect x="380" y="390" width="70" height="60" rx="2" class="stair"/>
+  <text x="415" y="415" class="sublabel">Stairs</text>
+  <text x="415" y="428" class="sublabel">B</text>
+
+  <!-- Lift -->
+  <rect x="305" y="390" width="60" height="60" rx="2" class="lift"/>
+  <text x="335" y="415" class="sublabel">Lift</text>
+  <text x="335" y="428" class="sublabel">▲▼</text>
+
+  <!-- Compass rose -->
+  <g transform="translate(440,80)">
+    <circle cx="0" cy="0" r="16" fill="white" stroke="#d1d5db" stroke-width="1"/>
+    <text x="0" y="-6" style="font-size:9px;fill:#374151;text-anchor:middle;font-weight:700;">N</text>
+    <line x1="0" y1="-12" x2="0" y2="12" stroke="#9ca3af" stroke-width="1"/>
+    <line x1="-12" y1="0" x2="12" y2="0" stroke="#9ca3af" stroke-width="1"/>
+  </g>
+</svg>
