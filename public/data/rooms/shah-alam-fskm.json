@@ -1,0 +1,8 @@
+[
+  {"id": "fskm-L1-R101", "name": "Bilik Kuliah 101", "floor": 1, "type": "lecture_hall", "capacity": 120, "svgElementId": "room-101"},
+  {"id": "fskm-L1-R102", "name": "Bilik Kuliah 102", "floor": 1, "type": "lecture_hall", "capacity": 80, "svgElementId": "room-102"},
+  {"id": "fskm-L2-LAB01", "name": "Makmal Komputer 1", "floor": 2, "type": "lab", "capacity": 40, "svgElementId": "lab-01"},
+  {"id": "fskm-L2-LAB02", "name": "Makmal Komputer 2", "floor": 2, "type": "lab", "capacity": 40, "svgElementId": "lab-02"},
+  {"id": "fskm-L3-BK01", "name": "Bilik Kuliah 301", "floor": 3, "type": "lecture_hall", "capacity": 60, "svgElementId": "room-bk01"},
+  {"id": "fskm-L3-OFFICE", "name": "Pejabat Dekan", "floor": 3, "type": "office", "capacity": 10, "svgElementId": "dean-office"}
+]

@@ -1,0 +1,62 @@
+[
+  {
+    "id": "shah-alam-fskm",
+    "campus": "shah-alam",
+    "name": "Fakulti Sains Komputer & Matematik",
+    "shortName": "FSKM",
+    "coords": [3.07127, 101.50079],
+    "polygon": [[101.50059, 3.07095], [101.50099, 3.07095], [101.50099, 3.07159], [101.50059, 3.07159], [101.50059, 3.07095]],
+    "floors": 5,
+    "facilities": ["lecture halls", "computer labs", "cafeteria"],
+    "hours": "7:00–22:00",
+    "description": "Home to Computer Science and Mathematics programs at UiTM Shah Alam."
+  },
+  {
+    "id": "shah-alam-fka",
+    "campus": "shah-alam",
+    "name": "Fakulti Kejuruteraan Awam",
+    "shortName": "FKA",
+    "coords": [3.06985, 101.50150],
+    "polygon": [[101.50120, 3.06960], [101.50180, 3.06960], [101.50180, 3.07010], [101.50120, 3.07010], [101.50120, 3.06960]],
+    "floors": 4,
+    "facilities": ["labs", "lecture halls", "workshop"],
+    "hours": "7:00–22:00",
+    "description": "Civil Engineering faculty offering undergraduate and postgraduate programs."
+  },
+  {
+    "id": "shah-alam-library",
+    "campus": "shah-alam",
+    "name": "Perpustakaan Tun Abdul Razak",
+    "shortName": "Library",
+    "coords": [3.07050, 101.49920],
+    "polygon": [[101.49890, 3.07020], [101.49950, 3.07020], [101.49950, 3.07080], [101.49890, 3.07080], [101.49890, 3.07020]],
+    "floors": 6,
+    "facilities": ["reading rooms", "digital resources", "discussion rooms", "printing"],
+    "hours": "8:00–22:00",
+    "description": "Main library with extensive academic resources and study spaces."
+  },
+  {
+    "id": "shah-alam-dewan-agong",
+    "campus": "shah-alam",
+    "name": "Dewan Agong Tuanku Canselor",
+    "shortName": "DATC",
+    "coords": [3.07200, 101.49880],
+    "polygon": [[101.49850, 3.07170], [101.49910, 3.07170], [101.49910, 3.07230], [101.49850, 3.07230], [101.49850, 3.07170]],
+    "floors": 2,
+    "facilities": ["auditorium", "exhibition hall"],
+    "hours": "8:00–18:00",
+    "description": "Main convocation hall and event venue for UiTM Shah Alam."
+  },
+  {
+    "id": "shah-alam-ptar",
+    "campus": "shah-alam",
+    "name": "Pusat Teknologi Maklumat & Komunikasi",
+    "shortName": "PTAR",
+    "coords": [3.07300, 101.50050],
+    "polygon": [[101.50020, 3.07270], [101.50080, 3.07270], [101.50080, 3.07330], [101.50020, 3.07330], [101.50020, 3.07270]],
+    "floors": 3,
+    "facilities": ["computer labs", "server rooms", "ICT support"],
+    "hours": "8:00–17:00",
+    "description": "ICT center providing technology services to the campus community."
+  }
+]
