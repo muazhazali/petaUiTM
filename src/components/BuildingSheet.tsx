@@ -72,32 +72,35 @@ export default function BuildingSheet({ building, onClose, onSetFrom, onSetTo }:
                 </div>
                 <button
                   onClick={onClose}
-                  className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0 -mt-0.5"
+                  aria-label="Close building details"
+                  className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-gray-100 active:bg-gray-200 transition-colors flex-shrink-0"
                 >
-                  <X className="h-4 w-4 text-gray-400" />
+                  <X className="h-4 w-4 text-gray-500" aria-hidden="true" />
                 </button>
               </div>
             </SheetHeader>
 
             {/* Direction buttons */}
             {(onSetFrom || onSetTo) && (
-              <div className="flex gap-2 px-5 py-3 border-b border-gray-100">
+              <div className="flex gap-2.5 px-5 py-3.5 border-b border-gray-100 bg-gray-50/60">
                 {onSetFrom && (
                   <button
                     onClick={() => { onSetFrom(building); }}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-semibold hover:bg-emerald-100 active:scale-95 transition-all"
+                    aria-label={`Set ${building.name} as start point`}
+                    className="flex-1 flex items-center justify-center gap-2 py-3 px-3 rounded-xl bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-600 active:scale-95 active:bg-emerald-700 shadow-sm shadow-emerald-500/20 transition-all"
                   >
-                    <MapPin className="h-3.5 w-3.5" />
-                    Set as start
+                    <MapPin className="h-4 w-4" aria-hidden="true" />
+                    Start here
                   </button>
                 )}
                 {onSetTo && (
                   <button
                     onClick={() => { onSetTo(building); }}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-indigo-50 text-indigo-700 text-xs font-semibold hover:bg-indigo-100 active:scale-95 transition-all"
+                    aria-label={`Set ${building.name} as destination`}
+                    className="flex-1 flex items-center justify-center gap-2 py-3 px-3 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 active:scale-95 active:bg-indigo-800 shadow-sm shadow-indigo-500/20 transition-all"
                   >
-                    <Navigation className="h-3.5 w-3.5" />
-                    Set as destination
+                    <Navigation className="h-4 w-4" aria-hidden="true" />
+                    Go here
                   </button>
                 )}
               </div>

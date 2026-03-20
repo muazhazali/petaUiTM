@@ -135,7 +135,7 @@ export default function MapComponent({
         type: "line",
         source: "route",
         layout: { "line-join": "round", "line-cap": "round" },
-        paint: { "line-color": "#ef4444", "line-width": 4, "line-opacity": 0.8 },
+        paint: { "line-color": "#6366f1", "line-width": 5, "line-opacity": 0.9 },
       });
 
       // Hover state
@@ -215,7 +215,7 @@ export default function MapComponent({
     fromMarkerRef.current = null;
     if (fromBuilding) {
       const el = document.createElement("div");
-      el.className = "w-4 h-4 rounded-full bg-emerald-500 border-2 border-white shadow-lg";
+      el.className = "w-5 h-5 rounded-full bg-emerald-500 border-[3px] border-white shadow-lg shadow-emerald-500/40";
       fromMarkerRef.current = new maplibregl.Marker({ element: el })
         .setLngLat([fromBuilding.coords[1], fromBuilding.coords[0]])
         .addTo(map);
@@ -231,7 +231,7 @@ export default function MapComponent({
     toMarkerRef.current = null;
     if (toBuilding) {
       const el = document.createElement("div");
-      el.className = "w-4 h-4 rounded-full bg-red-500 border-2 border-white shadow-lg";
+      el.className = "w-5 h-5 rounded-full bg-rose-500 border-[3px] border-white shadow-lg shadow-rose-500/40";
       toMarkerRef.current = new maplibregl.Marker({ element: el })
         .setLngLat([toBuilding.coords[1], toBuilding.coords[0]])
         .addTo(map);

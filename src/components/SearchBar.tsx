@@ -105,8 +105,12 @@ export default function SearchBar({ buildings, onSelectBuilding }: SearchBarProp
             setOpen(true);
           }}
           onFocus={() => setOpen(true)}
-          placeholder="Search buildings or rooms..."
-          className="w-full h-10 pl-9 pr-9 rounded-xl text-sm glass shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:shadow-md transition-all duration-200"
+          placeholder="Search buildings or rooms…"
+          aria-label="Search buildings or rooms"
+          aria-autocomplete="list"
+          aria-expanded={open && results.length > 0}
+          role="combobox"
+          className="w-full h-11 pl-9 pr-9 rounded-xl text-sm font-medium bg-white border border-gray-200 shadow-sm placeholder:text-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:shadow-md transition-all duration-200"
         />
         {query && (
           <button
@@ -119,22 +123,28 @@ export default function SearchBar({ buildings, onSelectBuilding }: SearchBarProp
       </div>
 
       {open && results.length > 0 && (
-        <div className="absolute top-full mt-2 w-full glass rounded-xl shadow-xl overflow-hidden animate-fade-in-up z-50">
-          <div className="max-h-80 overflow-y-auto scrollbar-hide">
+        <div
+          className="absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden animate-fade-in-up z-50"
+          role="listbox"
+          aria-label="Search results"
+        >
+          <div className="max-h-72 overflow-y-auto scrollbar-hide divide-y divide-gray-100/60">
             {results.map((result, i) => (
               <button
                 key={i}
-                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-indigo-50/60 active:bg-indigo-100/60 text-left transition-colors"
+                role="option"
+                aria-selected="false"
+                className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-indigo-50/70 active:bg-indigo-100/70 text-left transition-colors"
                 onMouseDown={(e) => {
                   e.preventDefault();
                   handleSelect(result);
                 }}
               >
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
                   result.type === "building"
                     ? "bg-indigo-100 text-indigo-600"
                     : "bg-emerald-100 text-emerald-600"
-                }`}>
+                }`} aria-hidden="true">
                   {result.type === "building" ? (
                     <MapPin className="h-4 w-4" />
                   ) : (
@@ -142,8 +152,8 @@ export default function SearchBar({ buildings, onSelectBuilding }: SearchBarProp
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-gray-800 truncate">{result.displayName}</p>
-                  <p className="text-xs text-gray-400 truncate">{result.subtitle}</p>
+                  <p className="text-sm font-semibold text-gray-900 truncate">{result.displayName}</p>
+                  <p className="text-xs text-gray-500 truncate mt-0.5">{result.subtitle}</p>
                 </div>
               </button>
             ))}

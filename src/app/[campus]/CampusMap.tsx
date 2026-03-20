@@ -174,19 +174,19 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
     <div className="h-[100dvh] w-screen flex flex-col overflow-hidden">
       {/* Header */}
       <header className="absolute top-0 left-0 right-0 z-10 safe-top pointer-events-none">
-        <div className="flex items-center gap-2 p-3 sm:p-4">
+        <div className="flex items-start gap-2 p-3 sm:p-4">
           {/* Back button */}
           <Link
             href="/"
-            className="pointer-events-auto glass rounded-xl px-2.5 py-2 sm:px-3 flex items-center gap-1.5 hover:shadow-md active:scale-95 transition-all duration-200"
+            aria-label="Back to campus list"
+            className="pointer-events-auto bg-white border border-gray-200 shadow-sm rounded-xl px-2.5 py-2.5 sm:px-3 flex items-center gap-1.5 hover:shadow-md active:scale-95 transition-all duration-200 flex-shrink-0 mt-0.5"
           >
-            <ChevronLeft className="h-4 w-4 text-indigo-600" />
-            <MapPin className="h-4 w-4 text-indigo-600 hidden sm:block" />
+            <ChevronLeft className="h-4 w-4 text-indigo-600" aria-hidden="true" />
             <span className="text-sm font-semibold text-gray-800 hidden sm:inline">PetaUiTM</span>
           </Link>
 
           {/* Search or Nav panel - grows to fill */}
-          <div className="pointer-events-auto flex-1 max-w-xs sm:max-w-sm">
+          <div className="pointer-events-auto flex-1 min-w-0">
             {navMode ? (
               <NavigationPanel
                 from={fromBuilding}
@@ -198,24 +198,21 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
                 onClose={handleCloseNav}
               />
             ) : (
-              <SearchBar buildings={buildings} onSelectBuilding={(b) => handleBuildingSelect(b)} />
+              <div className="flex gap-2">
+                <div className="flex-1 min-w-0">
+                  <SearchBar buildings={buildings} onSelectBuilding={(b) => handleBuildingSelect(b)} />
+                </div>
+                {/* Directions button — always visible with label */}
+                <button
+                  onClick={() => setNavMode(true)}
+                  aria-label="Get directions"
+                  className="bg-white border border-gray-200 shadow-sm rounded-xl px-3 py-2.5 flex items-center gap-1.5 hover:shadow-md active:scale-95 transition-all duration-200 flex-shrink-0 text-indigo-600"
+                >
+                  <Navigation className="h-4 w-4" aria-hidden="true" />
+                  <span className="text-sm font-semibold hidden sm:inline">Directions</span>
+                </button>
+              </div>
             )}
-          </div>
-
-          {/* Right side: campus name or directions toggle */}
-          <div className="pointer-events-auto flex items-center gap-2">
-            {!navMode && (
-              <button
-                onClick={() => setNavMode(true)}
-                className="glass rounded-xl p-2 hover:shadow-md active:scale-95 transition-all duration-200"
-                title="Get directions"
-              >
-                <Navigation className="h-4 w-4 text-indigo-600" />
-              </button>
-            )}
-            <div className="glass rounded-xl px-3 py-2 hidden sm:block">
-              <span className="text-xs font-medium text-gray-600">{campus.name}</span>
-            </div>
           </div>
         </div>
       </header>
