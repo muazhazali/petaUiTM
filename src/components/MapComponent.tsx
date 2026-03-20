@@ -40,13 +40,13 @@ export default function MapComponent({
       zoom: campus.zoom,
     });
 
-    map.addControl(new maplibregl.NavigationControl(), "top-right");
+    map.addControl(new maplibregl.NavigationControl(), "bottom-right");
     map.addControl(
       new maplibregl.GeolocateControl({
         positionOptions: { enableHighAccuracy: true },
         trackUserLocation: true,
       }),
-      "top-right"
+      "bottom-right"
     );
 
     map.on("load", () => {
@@ -74,14 +74,14 @@ export default function MapComponent({
           "fill-color": [
             "case",
             ["boolean", ["feature-state", "selected"], false],
-            "#4f46e5",
-            "#3b82f6",
+            "#6366f1",
+            "#818cf8",
           ],
           "fill-opacity": [
             "case",
             ["boolean", ["feature-state", "hover"], false],
-            0.8,
-            0.5,
+            0.7,
+            0.45,
           ],
         },
       });
@@ -94,8 +94,8 @@ export default function MapComponent({
           "line-color": [
             "case",
             ["boolean", ["feature-state", "selected"], false],
-            "#3730a3",
-            "#2563eb",
+            "#4f46e5",
+            "#6366f1",
           ],
           "line-width": 2,
         },
@@ -111,7 +111,7 @@ export default function MapComponent({
           "text-anchor": "center",
         },
         paint: {
-          "text-color": "#1e3a8a",
+          "text-color": "#4338ca",
           "text-halo-color": "#ffffff",
           "text-halo-width": 2,
         },
