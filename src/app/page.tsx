@@ -25,19 +25,19 @@ export default async function Home() {
   const campuses = await getCampuses();
 
   return (
-    <main className="min-h-screen relative overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+    <main className="min-h-screen relative overflow-hidden bg-indigo-50">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-indigo-200/30 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-200/30 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-100/20 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-indigo-200/30 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-100/20 rounded-full blur-3xl" />
       </div>
 
       <div className="relative flex flex-col items-center justify-center min-h-screen px-5 py-12 sm:px-8">
         <div className="w-full max-w-lg stagger-children">
           {/* Logo & Hero */}
           <div className="text-center mb-10">
-            <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/25 mb-5">
+            <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-indigo-500 shadow-lg shadow-indigo-500/25 mb-5">
               <MapPin className="h-8 w-8 sm:h-10 sm:w-10 text-white" strokeWidth={2.5} />
             </div>
             <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 tracking-tight">
@@ -60,7 +60,7 @@ export default async function Home() {
                 className="group block glass rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-lg hover:shadow-indigo-500/10 transition-all duration-300 hover:-translate-y-0.5"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shadow-sm shadow-indigo-500/20 group-hover:scale-105 transition-transform duration-300">
+                  <div className="w-12 h-12 rounded-xl bg-indigo-500 flex items-center justify-center shadow-sm shadow-indigo-500/20 group-hover:scale-105 transition-transform duration-300">
                     <Navigation className="h-5 w-5 text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
