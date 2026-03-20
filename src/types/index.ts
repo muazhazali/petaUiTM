@@ -28,6 +28,17 @@ export interface Room {
   svgElementId: string;
 }
 
+export type POICategory = "food" | "mosque" | "atm" | "parking" | "bus" | "health" | "library";
+
+export interface POI {
+  id: string;
+  campus: string;
+  name: string;
+  category: POICategory;
+  coords: [number, number]; // [lat, lng]
+  description?: string;
+}
+
 export interface SearchResult {
   type: 'building' | 'room';
   item: Building | Room;

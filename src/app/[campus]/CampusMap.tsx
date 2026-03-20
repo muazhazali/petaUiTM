@@ -3,12 +3,20 @@
 import { useState, useEffect, useCallback, Suspense } from "react";
 import dynamic from "next/dynamic";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Building, Campus } from "@/types";
+import { Building, Campus, POI, POICategory } from "@/types";
 import BuildingSheet from "@/components/BuildingSheet";
 import SearchBar from "@/components/SearchBar";
 import NavigationPanel from "@/components/NavigationPanel";
+import POIFilter from "@/components/POIFilter";
 import { MapPin, ChevronLeft, Navigation } from "lucide-react";
 import Link from "next/link";
+
+export interface RouteStep {
+  maneuver: string;
+  name: string;
+  distance: number; // metres
+  duration: number; // seconds
+}
 
 const MapComponent = dynamic(() => import("@/components/MapComponent"), {
   ssr: false,
@@ -29,23 +37,42 @@ interface CampusMapProps {
   buildings: Building[];
 }
 
+export interface RouteInfo {
+  geojson: GeoJSON.FeatureCollection;
+  distance: number; // metres
+  duration: number; // seconds
+  steps: RouteStep[];
+}
+
 async function fetchRoute(
   from: Building,
   to: Building
-): Promise<GeoJSON.FeatureCollection | null> {
-  // Use OSRM public demo server for walking routes
+): Promise<RouteInfo | null> {
   const fromCoord = `${from.coords[1]},${from.coords[0]}`;
   const toCoord = `${to.coords[1]},${to.coords[0]}`;
-  const url = `https://router.project-osrm.org/route/v1/foot/${fromCoord};${toCoord}?overview=full&geometries=geojson`;
+  const url = `https://router.project-osrm.org/route/v1/foot/${fromCoord};${toCoord}?overview=full&geometries=geojson&steps=true`;
   try {
     const res = await fetch(url);
     if (!res.ok) return null;
     const data = await res.json();
-    const geometry = data?.routes?.[0]?.geometry;
-    if (!geometry) return null;
+    const route = data?.routes?.[0];
+    if (!route?.geometry) return null;
+    const steps: RouteStep[] = (route.legs?.[0]?.steps ?? [])
+      .filter((s: { maneuver: { type: string } }) => s.maneuver?.type !== "depart" || true)
+      .map((s: { maneuver: { type: string }; name: string; distance: number; duration: number }) => ({
+        maneuver: s.maneuver?.type ?? "continue",
+        name: s.name || "",
+        distance: s.distance ?? 0,
+        duration: s.duration ?? 0,
+      }));
     return {
-      type: "FeatureCollection",
-      features: [{ type: "Feature", properties: {}, geometry }],
+      geojson: {
+        type: "FeatureCollection",
+        features: [{ type: "Feature", properties: {}, geometry: route.geometry }],
+      },
+      distance: route.distance ?? 0,
+      duration: route.duration ?? 0,
+      steps,
     };
   } catch {
     return null;
@@ -62,6 +89,17 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
   const [toBuilding, setToBuilding] = useState<Building | null>(null);
   const [routeGeoJSON, setRouteGeoJSON] = useState<GeoJSON.FeatureCollection | null>(null);
   const [routeLoading, setRouteLoading] = useState(false);
+  const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
+  const [pois, setPois] = useState<POI[]>([]);
+  const [activeCategories, setActiveCategories] = useState<Set<POICategory>>(new Set());
+
+  // Load POIs for this campus
+  useEffect(() => {
+    fetch("/data/pois.json")
+      .then((r) => r.json())
+      .then((all: POI[]) => setPois(all.filter((p) => p.campus === campus.id)))
+      .catch(() => {});
+  }, [campus.id]);
 
   // Sync state from URL params on load
   useEffect(() => {
@@ -93,8 +131,9 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
       return;
     }
     setRouteLoading(true);
-    fetchRoute(fromBuilding, toBuilding).then((geojson) => {
-      setRouteGeoJSON(geojson);
+    fetchRoute(fromBuilding, toBuilding).then((info) => {
+      setRouteGeoJSON(info?.geojson ?? null);
+      setRouteInfo(info);
       setRouteLoading(false);
     });
   }, [fromBuilding, toBuilding]);
@@ -161,6 +200,7 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
     setFromBuilding(null);
     setToBuilding(null);
     setRouteGeoJSON(null);
+    setRouteInfo(null);
     router.replace(`/${campus.id}`, { scroll: false });
   }, [router, campus.id]);
 
@@ -192,9 +232,10 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
                 from={fromBuilding}
                 to={toBuilding}
                 isLoading={routeLoading}
+                routeInfo={routeInfo}
                 onSwap={handleSwap}
-                onClearFrom={() => { setFromBuilding(null); syncUrl(null, toBuilding, null, true); }}
-                onClearTo={() => { setToBuilding(null); syncUrl(fromBuilding, null, null, true); }}
+                onClearFrom={() => { setFromBuilding(null); syncUrl(null, toBuilding, null, true); setRouteInfo(null); }}
+                onClearTo={() => { setToBuilding(null); syncUrl(fromBuilding, null, null, true); setRouteInfo(null); }}
                 onClose={handleCloseNav}
               />
             ) : (
@@ -215,6 +256,13 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
             )}
           </div>
         </div>
+
+        {/* POI filter bar — only in explore mode */}
+        {!navMode && (
+          <div className="pointer-events-auto px-3 sm:px-4 pb-2">
+            <POIFilter activeCategories={activeCategories} onChange={setActiveCategories} />
+          </div>
+        )}
       </header>
 
       {/* Map */}
@@ -227,8 +275,30 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
           routeGeoJSON={routeGeoJSON}
           fromBuilding={fromBuilding}
           toBuilding={toBuilding}
+          pois={pois}
+          activeCategories={activeCategories}
         />
       </div>
+
+      {/* Persistent navigation destination banner */}
+      {navMode && toBuilding && (
+        <div className="absolute bottom-0 left-0 right-0 z-10 safe-bottom pointer-events-none">
+          <div className="mx-3 mb-3 sm:mx-4 sm:mb-4 pointer-events-auto">
+            <div className="flex items-center gap-2.5 px-4 py-2.5 bg-indigo-600 text-white rounded-2xl shadow-lg shadow-indigo-500/30">
+              <Navigation className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+              <div className="flex-1 min-w-0">
+                <span className="text-xs text-indigo-200 block leading-none mb-0.5">Navigating to</span>
+                <span className="text-sm font-semibold truncate block">{toBuilding.name}</span>
+              </div>
+              {routeInfo && (
+                <span className="text-xs font-medium text-indigo-200 flex-shrink-0">
+                  ~{Math.round(routeInfo.duration / 60)} min
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Building info sheet */}
       <BuildingSheet

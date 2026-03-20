@@ -1,0 +1,98 @@
+[
+  {
+    "id": "sa-cafe-pusat",
+    "campus": "shah-alam",
+    "name": "Kafeteria Pusat",
+    "category": "food",
+    "coords": [3.0710, 101.5005],
+    "description": "Main cafeteria near the central area"
+  },
+  {
+    "id": "sa-cafe-fskm",
+    "campus": "shah-alam",
+    "name": "Kafeteria FSKM",
+    "category": "food",
+    "coords": [3.0712, 101.5008],
+    "description": "Cafeteria inside FSKM building"
+  },
+  {
+    "id": "sa-mosque",
+    "campus": "shah-alam",
+    "name": "Masjid UiTM",
+    "category": "mosque",
+    "coords": [3.0695, 101.4985],
+    "description": "Main mosque on campus"
+  },
+  {
+    "id": "sa-surau-fskm",
+    "campus": "shah-alam",
+    "name": "Surau FSKM",
+    "category": "mosque",
+    "coords": [3.0714, 101.5010],
+    "description": "Prayer room in FSKM"
+  },
+  {
+    "id": "sa-atm-maybank",
+    "campus": "shah-alam",
+    "name": "ATM Maybank",
+    "category": "atm",
+    "coords": [3.0703, 101.4995],
+    "description": "Maybank ATM near main entrance"
+  },
+  {
+    "id": "sa-atm-bsn",
+    "campus": "shah-alam",
+    "name": "ATM BSN",
+    "category": "atm",
+    "coords": [3.0706, 101.5002],
+    "description": "BSN ATM near the library"
+  },
+  {
+    "id": "sa-parking-a",
+    "campus": "shah-alam",
+    "name": "Tempat Letak Kereta A",
+    "category": "parking",
+    "coords": [3.0720, 101.4990],
+    "description": "Parking lot A — north of campus"
+  },
+  {
+    "id": "sa-parking-b",
+    "campus": "shah-alam",
+    "name": "Tempat Letak Kereta B",
+    "category": "parking",
+    "coords": [3.0690, 101.5010],
+    "description": "Parking lot B — south-east of campus"
+  },
+  {
+    "id": "sa-busstop-main",
+    "campus": "shah-alam",
+    "name": "Perhentian Bas Utama",
+    "category": "bus",
+    "coords": [3.0700, 101.4980],
+    "description": "Main bus stop at campus entrance"
+  },
+  {
+    "id": "sa-busstop-fskm",
+    "campus": "shah-alam",
+    "name": "Perhentian Bas FSKM",
+    "category": "bus",
+    "coords": [3.0715, 101.5012],
+    "description": "Bus stop near FSKM"
+  },
+  {
+    "id": "sa-clinic",
+    "campus": "shah-alam",
+    "name": "Klinik Kesihatan UiTM",
+    "category": "health",
+    "coords": [3.0698, 101.4992],
+    "description": "Campus health clinic"
+  },
+  {
+    "id": "sa-library",
+    "campus": "shah-alam",
+    "name": "Perpustakaan Tun Abdul Razak",
+    "category": "library",
+    "coords": [3.0705, 101.5000],
+    "description": "Main campus library"
+  }
+]

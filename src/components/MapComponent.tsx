@@ -2,7 +2,27 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import maplibregl from "maplibre-gl";
-import { Building } from "@/types";
+import { Building, POI, POICategory } from "@/types";
+
+const POI_COLORS: Record<POICategory, string> = {
+  food: "#f59e0b",
+  mosque: "#10b981",
+  atm: "#3b82f6",
+  parking: "#8b5cf6",
+  bus: "#ec4899",
+  health: "#ef4444",
+  library: "#6366f1",
+};
+
+const POI_ICONS: Record<POICategory, string> = {
+  food: "🍽️",
+  mosque: "🕌",
+  atm: "🏧",
+  parking: "🅿️",
+  bus: "🚌",
+  health: "🏥",
+  library: "📚",
+};
 
 interface MapComponentProps {
   campus: { id: string; center: [number, number]; zoom: number; bounds: [[number, number], [number, number]] };
@@ -12,6 +32,8 @@ interface MapComponentProps {
   routeGeoJSON?: GeoJSON.FeatureCollection | null;
   fromBuilding?: Building | null;
   toBuilding?: Building | null;
+  pois?: POI[];
+  activeCategories?: Set<POICategory>;
 }
 
 export default function MapComponent({
@@ -22,11 +44,14 @@ export default function MapComponent({
   routeGeoJSON,
   fromBuilding,
   toBuilding,
+  pois = [],
+  activeCategories,
 }: MapComponentProps) {
   const mapRef = useRef<maplibregl.Map | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const fromMarkerRef = useRef<maplibregl.Marker | null>(null);
   const toMarkerRef = useRef<maplibregl.Marker | null>(null);
+  const poiMarkersRef = useRef<maplibregl.Marker[]>([]);
 
   const handleBuildingClick = useCallback(
     (buildingId: string) => {
@@ -256,6 +281,47 @@ export default function MapComponent({
       map.flyTo({ center: [toBuilding.coords[1], toBuilding.coords[0]], zoom: Math.max(map.getZoom(), 16), duration: 600 });
     }
   }, [toBuilding]);
+
+  // POI markers
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    // Remove existing POI markers
+    poiMarkersRef.current.forEach((m) => m.remove());
+    poiMarkersRef.current = [];
+
+    const visiblePois = activeCategories
+      ? pois.filter((p) => activeCategories.has(p.category))
+      : [];
+
+    visiblePois.forEach((poi) => {
+      const el = document.createElement("div");
+      el.className = "flex items-center justify-center w-8 h-8 rounded-full border-2 border-white shadow-lg text-base cursor-pointer select-none";
+      el.style.backgroundColor = POI_COLORS[poi.category] ?? "#6366f1";
+      el.textContent = POI_ICONS[poi.category] ?? "📍";
+      el.title = poi.name;
+
+      const popup = new maplibregl.Popup({ offset: 16, closeButton: false, maxWidth: "200px" }).setHTML(
+        `<div style="font-family:sans-serif;padding:4px 2px">
+          <div style="font-weight:600;font-size:13px;color:#111">${poi.name}</div>
+          ${poi.description ? `<div style="font-size:11px;color:#666;margin-top:2px">${poi.description}</div>` : ""}
+        </div>`
+      );
+
+      const marker = new maplibregl.Marker({ element: el })
+        .setLngLat([poi.coords[1], poi.coords[0]])
+        .setPopup(popup)
+        .addTo(map);
+
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        marker.togglePopup();
+      });
+
+      poiMarkersRef.current.push(marker);
+    });
+  }, [pois, activeCategories]);
 
   return <div ref={containerRef} className="w-full h-full" />;
 }
