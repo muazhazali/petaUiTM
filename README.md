@@ -1,36 +1,143 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PetaUiTM
+
+An open-source interactive campus map for Universiti Teknologi MARA (UiTM). Built with Next.js and MapLibre GL JS, it provides building information, fuzzy search, indoor floor plans, and walking navigation — all as a static app with no backend.
+
+**Live demo:** https://petauitm.vercel.app
+
+---
+
+## Features
+
+- Interactive map with building polygons (hover, tap, deep-link)
+- Fuzzy search across buildings and rooms (Fuse.js)
+- Building info sheet with facilities and operating hours
+- Indoor SVG floor plans with tappable rooms
+- Outdoor walking navigation via OSRM
+- Indoor A* pathfinding over per-floor navigation graphs
+- Multi-campus support with campus selector landing page
+- PWA — installable with offline asset caching
+
+---
+
+## Tech Stack
+
+| Concern         | Choice                        |
+|-----------------|-------------------------------|
+| Framework       | Next.js 15 (App Router, SSG)  |
+| Map renderer    | MapLibre GL JS                |
+| Tile source     | CARTO raster tiles            |
+| Search          | Fuse.js (client-side)         |
+| Outdoor routing | OSRM demo API                 |
+| Indoor routing  | Custom A* (client-side)       |
+| Floor plans     | Static SVG files              |
+| Data            | Static JSON in `public/data/` |
+| Styling         | Tailwind CSS v4 + shadcn/ui   |
+
+---
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- [pnpm](https://pnpm.io/) (`npm i -g pnpm`)
+
+### Local development
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+git clone https://github.com/muaz-urmf/petauitm.git
+cd petauitm
+pnpm install
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Build for production
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+pnpm build
+pnpm start
+```
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## Data Contribution Guide
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+All map data lives in `public/data/` as static JSON files. Contributing data is a pull request away — no backend required.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Adding a building
 
-## Deploy on Vercel
+Add an entry to `public/data/buildings.json`:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```json
+{
+  "id": "shah-alam-fskm",
+  "campus": "shah-alam",
+  "name": "Fakulti Sains Komputer & Matematik",
+  "shortName": "FSKM",
+  "coords": [3.0708, 101.4998],
+  "polygon": [[[101.4995, 3.0705], [101.5001, 3.0705], [101.5001, 3.0711], [101.4995, 3.0711], [101.4995, 3.0705]]],
+  "floors": 5,
+  "facilities": ["lecture halls", "labs", "cafeteria"],
+  "hours": "7:00-22:00"
+}
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Note: `coords` is `[lat, lng]`; `polygon` coordinates are `[lng, lat]` (GeoJSON standard).
+
+### Adding rooms for a building
+
+Create `public/data/rooms/{buildingId}.json`:
+
+```json
+[
+  {
+    "id": "fskm-L3-BK01",
+    "name": "Bilik Kuliah 01",
+    "floor": 3,
+    "type": "lecture_hall",
+    "capacity": 120,
+    "svgElementId": "room-bk01"
+  }
+]
+```
+
+Place the corresponding SVG floor plan at `public/floorplans/{buildingId}-L{n}.svg`. Room SVG element IDs must match the `svgElementId` values.
+
+### Adding an indoor navigation graph
+
+Create `public/data/nav-graph/{buildingId}.json`:
+
+```json
+{
+  "nodes": [
+    { "id": "entrance-main", "floor": 0, "coords": [3.0708, 101.4998] }
+  ],
+  "edges": [
+    { "from": "entrance-main", "to": "L0-stairs-A", "weight": 15 }
+  ]
+}
+```
+
+### Adding a campus
+
+Add an entry to `public/data/campuses.json`:
+
+```json
+{
+  "id": "johor",
+  "name": "UiTM Johor",
+  "center": [103.7618, 1.5338],
+  "zoom": 16,
+  "bounds": [[103.75, 1.52], [103.77, 1.54]]
+}
+```
+
+Then add buildings with `"campus": "johor"` in `buildings.json`. The campus will automatically appear on the landing page and be accessible at `/johor`.
+
+---
+
+## License
+
+MIT

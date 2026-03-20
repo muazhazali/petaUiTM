@@ -187,10 +187,10 @@ Single-page app — all views are state-driven overlays on the map canvas.
 
 ### v0.6 — Polish & Launch
 
-- [ ] PWA support (offline map caching)
+- [x] PWA support (offline map caching)
 - [x] Mobile-responsive layout
 - [x] Contributing guide for data (adding campuses/buildings/rooms)
-- [ ] README + demo deploy
+- [x] README + demo deploy
 
 ---
 
