@@ -21,12 +21,22 @@ export interface RouteStep {
 const MapComponent = dynamic(() => import("@/components/MapComponent"), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-full bg-gradient-to-br from-indigo-50 to-white flex items-center justify-center">
-      <div className="flex flex-col items-center gap-3 animate-fade-in">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+    <div className="w-full h-full bg-[#eef4f0] flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4 animate-fade-in">
+        <div
+          className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-md"
+          style={{ background: "oklch(0.32 0.09 155)" }}
+        >
           <MapPin className="h-6 w-6 text-white animate-pulse" />
         </div>
-        <p className="text-sm text-gray-400 font-medium">Loading map...</p>
+        <div className="flex flex-col items-center gap-1">
+          <p className="text-sm font-medium text-stone-600">Loading map</p>
+          <div className="flex gap-1" aria-hidden="true">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#2f7d53] animate-bounce [animation-delay:0ms]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#2f7d53] animate-bounce [animation-delay:150ms]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#2f7d53] animate-bounce [animation-delay:300ms]" />
+          </div>
+        </div>
       </div>
     </div>
   ),
@@ -219,10 +229,10 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
           <Link
             href="/"
             aria-label="Back to campus list"
-            className="pointer-events-auto bg-white border border-gray-200 shadow-sm rounded-xl px-2.5 py-2.5 sm:px-3 flex items-center gap-1.5 hover:shadow-md active:scale-95 transition-all duration-200 flex-shrink-0 mt-0.5"
+            className="pointer-events-auto map-panel rounded-xl px-2.5 py-2.5 sm:px-3 flex items-center gap-1.5 hover:shadow-xl active:scale-95 transition-all duration-200 flex-shrink-0 mt-0.5"
           >
-            <ChevronLeft className="h-4 w-4 text-indigo-600" aria-hidden="true" />
-            <span className="text-sm font-semibold text-gray-800 hidden sm:inline">PetaUiTM</span>
+            <ChevronLeft className="h-4 w-4 flex-shrink-0" style={{ color: "oklch(0.32 0.09 155)" }} aria-hidden="true" />
+            <span className="text-sm font-semibold text-stone-800 hidden sm:inline">PetaUiTM</span>
           </Link>
 
           {/* Search or Nav panel - grows to fill */}
@@ -246,11 +256,12 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
                 <div className="flex-1 min-w-0">
                   <SearchBar buildings={buildings} onSelectBuilding={(b) => handleBuildingSelect(b)} />
                 </div>
-                {/* Directions button — always visible with label */}
+                {/* Directions button */}
                 <button
                   onClick={() => setNavMode(true)}
                   aria-label="Get directions"
-                  className="bg-white border border-gray-200 shadow-sm rounded-xl px-3 py-2.5 flex items-center gap-1.5 hover:shadow-md active:scale-95 transition-all duration-200 flex-shrink-0 text-indigo-600"
+                  className="map-panel rounded-xl px-3 py-2.5 flex items-center gap-1.5 hover:shadow-xl active:scale-95 transition-all duration-200 flex-shrink-0"
+                  style={{ color: "oklch(0.32 0.09 155)" }}
                 >
                   <Navigation className="h-4 w-4" aria-hidden="true" />
                   <span className="text-sm font-semibold hidden sm:inline">Directions</span>
@@ -287,14 +298,20 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
       {navMode && toBuilding && (
         <div className="absolute bottom-0 left-0 right-0 z-10 safe-bottom pointer-events-none">
           <div className="mx-3 mb-3 sm:mx-4 sm:mb-4 pointer-events-auto">
-            <div className="flex items-center gap-2.5 px-4 py-2.5 bg-indigo-600 text-white rounded-2xl shadow-lg shadow-indigo-500/30">
+            <div
+              className="flex items-center gap-2.5 px-4 py-3 rounded-2xl text-white shadow-lg"
+              style={{ background: "oklch(0.32 0.09 155)", boxShadow: "0 8px 32px oklch(0.32 0.09 155 / 0.35)" }}
+            >
               <Navigation className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
               <div className="flex-1 min-w-0">
-                <span className="text-xs text-indigo-200 block leading-none mb-0.5">Navigating to</span>
+                <span className="text-[10px] font-medium uppercase tracking-wider opacity-70 block leading-none mb-0.5">Navigating to</span>
                 <span className="text-sm font-semibold truncate block">{toBuilding.name}</span>
               </div>
               {routeInfo && (
-                <span className="text-xs font-medium text-indigo-200 flex-shrink-0">
+                <span
+                  className="text-xs font-semibold flex-shrink-0 px-2 py-1 rounded-lg"
+                  style={{ background: "rgba(255,255,255,0.15)" }}
+                >
                   ~{Math.round(routeInfo.duration / 60)} min
                 </span>
               )}
@@ -318,12 +335,15 @@ export default function CampusMap(props: CampusMapProps) {
   return (
     <Suspense
       fallback={
-        <div className="h-[100dvh] flex items-center justify-center bg-gradient-to-br from-indigo-50 to-white">
+        <div className="h-[100dvh] flex items-center justify-center bg-[#eef4f0]">
           <div className="flex flex-col items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+            <div
+              className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-md"
+              style={{ background: "oklch(0.32 0.09 155)" }}
+            >
               <MapPin className="h-6 w-6 text-white animate-pulse" />
             </div>
-            <p className="text-sm text-gray-400">Loading...</p>
+            <p className="text-sm font-medium text-stone-500">Loading...</p>
           </div>
         </div>
       }

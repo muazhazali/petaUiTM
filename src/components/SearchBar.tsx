@@ -69,7 +69,6 @@ export default function SearchBar({ buildings, onSelectBuilding }: SearchBarProp
     }
   };
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -97,7 +96,10 @@ export default function SearchBar({ buildings, onSelectBuilding }: SearchBarProp
   return (
     <div ref={containerRef} className="relative w-full">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-indigo-400" />
+        <Search
+          className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none"
+          style={{ color: "oklch(0.52 0.06 155)" }}
+        />
         <input
           ref={inputRef}
           value={query}
@@ -109,52 +111,76 @@ export default function SearchBar({ buildings, onSelectBuilding }: SearchBarProp
           aria-expanded={open && results.length > 0}
           aria-controls={listboxId}
           role="combobox"
-          className="w-full h-11 pl-9 pr-9 rounded-xl text-sm font-medium bg-white border border-gray-200 shadow-sm placeholder:text-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:shadow-md transition-all duration-200"
+          className="w-full h-11 pl-10 pr-10 rounded-xl text-sm font-medium placeholder:text-stone-400 text-stone-900 focus:outline-none transition-all duration-200"
+          style={{
+            background: "rgba(255,255,255,0.96)",
+            border: "1px solid rgba(0,0,0,0.08)",
+            boxShadow: "0 2px 12px rgba(13,43,26,0.08), 0 1px 3px rgba(0,0,0,0.05)",
+          }}
+          onFocusCapture={(e) => {
+            e.currentTarget.style.boxShadow = "0 0 0 2px oklch(0.32 0.09 155 / 0.25), 0 2px 12px rgba(13,43,26,0.08)";
+          }}
+          onBlurCapture={(e) => {
+            e.currentTarget.style.boxShadow = "0 2px 12px rgba(13,43,26,0.08), 0 1px 3px rgba(0,0,0,0.05)";
+          }}
         />
         {query && (
           <button
             onClick={handleClear}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-md hover:bg-gray-100 transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full bg-stone-100 hover:bg-stone-200 transition-colors"
+            aria-label="Clear search"
           >
-            <X className="h-3.5 w-3.5 text-gray-400" />
+            <X className="h-3 w-3 text-stone-500" />
           </button>
         )}
       </div>
 
       {open && results.length > 0 && (
         <div
-          className="absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden animate-fade-in-up z-50"
+          className="absolute top-full mt-2 w-full rounded-2xl overflow-hidden animate-fade-in-up z-50"
           id={listboxId}
           role="listbox"
           aria-label="Search results"
+          style={{
+            background: "rgba(255,255,255,0.97)",
+            border: "1px solid rgba(0,0,0,0.07)",
+            boxShadow: "0 16px 48px rgba(13,43,26,0.14), 0 4px 12px rgba(0,0,0,0.07)",
+          }}
         >
-          <div className="max-h-72 overflow-y-auto scrollbar-hide divide-y divide-gray-100/60">
+          <div className="max-h-72 overflow-y-auto scrollbar-hide">
             {results.map((result, i) => (
               <button
                 key={i}
                 role="option"
                 aria-selected="false"
-                className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-indigo-50/70 active:bg-indigo-100/70 text-left transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-stone-50/80 active:bg-stone-100/80 border-b border-stone-50 last:border-0"
                 onMouseDown={(e) => {
                   e.preventDefault();
                   handleSelect(result);
                 }}
               >
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                  result.type === "building"
-                    ? "bg-indigo-100 text-indigo-600"
-                    : "bg-emerald-100 text-emerald-600"
-                }`} aria-hidden="true">
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={
+                    result.type === "building"
+                      ? { background: "oklch(0.32 0.09 155 / 0.1)", color: "oklch(0.32 0.09 155)" }
+                      : { background: "oklch(0.62 0.15 155 / 0.1)", color: "oklch(0.45 0.12 155)" }
+                  }
+                  aria-hidden="true"
+                >
                   {result.type === "building" ? (
-                    <MapPin className="h-4 w-4" />
+                    <MapPin className="h-3.5 w-3.5" />
                   ) : (
-                    <DoorOpen className="h-4 w-4" />
+                    <DoorOpen className="h-3.5 w-3.5" />
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-gray-900 truncate">{result.displayName}</p>
-                  <p className="text-xs text-gray-500 truncate mt-0.5">{result.subtitle}</p>
+                  <p className="text-sm font-semibold text-stone-800 truncate">{result.displayName}</p>
+                  <p className="text-xs text-stone-400 truncate mt-0.5">{result.subtitle}</p>
                 </div>
+                <span className="text-[10px] font-medium text-stone-300 flex-shrink-0">
+                  {result.type === "building" ? "Building" : "Room"}
+                </span>
               </button>
             ))}
           </div>

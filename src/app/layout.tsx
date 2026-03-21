@@ -1,11 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { IBM_Plex_Sans, Geist_Mono, DM_Serif_Display } from "next/font/google";
 import "./globals.css";
 import { PWARegister } from "./pwa";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const ibmPlexSans = IBM_Plex_Sans({
+  variable: "--font-ibm",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600"],
+});
+
+const dmSerifDisplay = DM_Serif_Display({
+  variable: "--font-dm-serif",
+  subsets: ["latin"],
+  weight: ["400"],
+  style: ["normal", "italic"],
 });
 
 const geistMono = Geist_Mono({
@@ -27,7 +35,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#7A1020",
+  themeColor: "#1e5235",
 };
 
 export default function RootLayout({
@@ -38,7 +46,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${ibmPlexSans.variable} ${dmSerifDisplay.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
         <link rel="manifest" href="/manifest.json" />

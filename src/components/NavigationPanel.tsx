@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Fuse from "fuse.js";
-import { Building, Room } from "@/types";
+import { Building } from "@/types";
 import { RouteInfo } from "@/app/[campus]/CampusMap";
 import { ArrowUpDown, Navigation2, X, MapPin, Flag, Clock, Ruler, Share2, ChevronDown, ChevronUp, CornerDownRight, Search } from "lucide-react";
 
@@ -25,6 +25,8 @@ interface FuseResult {
   displayName: string;
   subtitle: string;
 }
+
+const GREEN = "oklch(0.32 0.09 155)";
 
 function formatDuration(seconds: number): string {
   const mins = Math.round(seconds / 60);
@@ -64,9 +66,8 @@ function WaypointInput({
   value,
   placeholder,
   icon,
-  colorClass,
-  bgClass,
-  borderClass,
+  accentColor,
+  accentBg,
   buildings,
   onSelect,
   onClear,
@@ -74,9 +75,8 @@ function WaypointInput({
   value: Building | null;
   placeholder: string;
   icon: React.ReactNode;
-  colorClass: string;
-  bgClass: string;
-  borderClass: string;
+  accentColor: string;
+  accentBg: string;
   buildings: Building[];
   onSelect: (b: Building) => void;
   onClear: () => void;
@@ -100,9 +100,15 @@ function WaypointInput({
     });
   }, [buildings]);
 
-  // sync query with selected value
+  // Reset query when external value is set (deferred to avoid sync state call)
+  const prevValueRef = useRef(value);
   useEffect(() => {
-    if (value) setQuery("");
+    if (value !== prevValueRef.current) {
+      prevValueRef.current = value;
+      if (value) {
+        setTimeout(() => setQuery(""), 0);
+      }
+    }
   }, [value]);
 
   useEffect(() => {
@@ -133,17 +139,20 @@ function WaypointInput({
     inputRef.current?.blur();
   }
 
-  // If a building is selected, show pill; otherwise show input
   if (value) {
     return (
-      <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border ${bgClass} ${borderClass}`}>
-        <span className={`flex-shrink-0 ${colorClass}`}>{icon}</span>
-        <span className={`flex-1 text-sm font-medium truncate text-gray-900`}>{value.name}</span>
+      <div
+        className="flex items-center gap-2 px-3 py-2.5 rounded-xl border"
+        style={{ background: accentBg, borderColor: `${accentColor} / 0.2` }}
+      >
+        <span className="flex-shrink-0" style={{ color: accentColor }}>{icon}</span>
+        <span className="flex-1 text-sm font-medium truncate text-stone-900">{value.name}</span>
         <button
           onClick={onClear}
           className="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full hover:bg-black/10 transition-colors"
+          aria-label="Clear"
         >
-          <X className="h-3 w-3" aria-hidden="true" />
+          <X className="h-3 w-3 text-stone-500" aria-hidden="true" />
         </button>
       </div>
     );
@@ -151,36 +160,43 @@ function WaypointInput({
 
   return (
     <div ref={containerRef} className="relative">
-      <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border border-dashed bg-gray-50 border-gray-200 focus-within:border-indigo-300 focus-within:bg-white transition-colors`}>
-        <Search className="h-3.5 w-3.5 flex-shrink-0 text-gray-400" aria-hidden="true" />
+      <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-dashed border-stone-200 bg-stone-50 focus-within:border-stone-300 focus-within:bg-white transition-colors">
+        <Search className="h-3.5 w-3.5 flex-shrink-0 text-stone-300" aria-hidden="true" />
         <input
           ref={inputRef}
           value={query}
           onChange={(e) => handleChange(e.target.value)}
           onFocus={() => setOpen(true)}
           placeholder={placeholder}
-          className="flex-1 text-sm bg-transparent outline-none placeholder:text-gray-400 text-gray-900 min-w-0"
+          className="flex-1 text-sm bg-transparent outline-none placeholder:text-stone-400 text-stone-900 min-w-0"
         />
         {query && (
-          <button onClick={() => { setQuery(""); setResults([]); }} className="flex-shrink-0">
-            <X className="h-3 w-3 text-gray-400" aria-hidden="true" />
+          <button onClick={() => { setQuery(""); setResults([]); }} className="flex-shrink-0" aria-label="Clear">
+            <X className="h-3 w-3 text-stone-400" aria-hidden="true" />
           </button>
         )}
       </div>
 
       {open && results.length > 0 && (
-        <div className="absolute top-full mt-1.5 left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-xl z-[60] overflow-hidden">
-          <div className="max-h-48 overflow-y-auto divide-y divide-gray-100/60">
+        <div
+          className="absolute top-full mt-1.5 left-0 right-0 rounded-xl overflow-hidden z-[60]"
+          style={{
+            background: "rgba(255,255,255,0.97)",
+            border: "1px solid rgba(0,0,0,0.07)",
+            boxShadow: "0 12px 32px rgba(13,43,26,0.12), 0 2px 8px rgba(0,0,0,0.06)",
+          }}
+        >
+          <div className="max-h-48 overflow-y-auto divide-y divide-stone-50">
             {results.map((r, i) => (
               <button
                 key={i}
-                className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-indigo-50 text-left transition-colors"
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-stone-50/80"
                 onMouseDown={(e) => { e.preventDefault(); handleSelect(r.building); }}
               >
-                <MapPin className="h-3.5 w-3.5 text-indigo-400 flex-shrink-0" aria-hidden="true" />
+                <MapPin className="h-3.5 w-3.5 flex-shrink-0" style={{ color: GREEN }} aria-hidden="true" />
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold text-gray-900 truncate">{r.displayName}</p>
-                  <p className="text-[10px] text-gray-400">{r.subtitle}</p>
+                  <p className="text-xs font-semibold text-stone-900 truncate">{r.displayName}</p>
+                  <p className="text-[10px] text-stone-400">{r.subtitle}</p>
                 </div>
               </button>
             ))}
@@ -216,41 +232,55 @@ export default function NavigationPanel({
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-lg w-full overflow-visible" role="region" aria-label="Directions panel">
+    <div
+      className="w-full rounded-2xl overflow-visible"
+      role="region"
+      aria-label="Directions panel"
+      style={{
+        background: "rgba(255,255,255,0.97)",
+        border: "1px solid rgba(0,0,0,0.07)",
+        boxShadow: "0 4px 24px rgba(13,43,26,0.1), 0 1px 4px rgba(0,0,0,0.06)",
+      }}
+    >
       {/* Header */}
-      <div className="flex items-center gap-2.5 px-4 pt-3 pb-2">
-        <Navigation2 className="h-4 w-4 text-indigo-600 flex-shrink-0" aria-hidden="true" />
-        <span className="text-sm font-bold text-gray-900 flex-1 tracking-tight">Directions</span>
+      <div className="flex items-center gap-2.5 px-4 pt-3 pb-2.5 border-b border-stone-100">
+        <div
+          className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+          style={{ background: GREEN }}
+        >
+          <Navigation2 className="h-3.5 w-3.5 text-white" aria-hidden="true" />
+        </div>
+        <span className="text-sm font-semibold text-stone-900 flex-1 tracking-tight">Directions</span>
         {bothSet && routeInfo && (
           <button
             onClick={handleShare}
             aria-label="Copy route link"
             title="Copy link to this route"
-            className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors text-gray-500"
+            className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-stone-100 active:bg-stone-200 transition-colors"
           >
             {copied ? (
-              <span className="text-[10px] font-semibold text-emerald-600">Copied!</span>
+              <span className="text-[10px] font-semibold" style={{ color: GREEN }}>Copied!</span>
             ) : (
-              <Share2 className="h-3.5 w-3.5" aria-hidden="true" />
+              <Share2 className="h-3.5 w-3.5 text-stone-400" aria-hidden="true" />
             )}
           </button>
         )}
         <button
           onClick={onClose}
           aria-label="Close directions"
-          className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors"
+          className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-stone-100 active:bg-stone-200 transition-colors"
         >
-          <X className="h-4 w-4 text-gray-500" aria-hidden="true" />
+          <X className="h-4 w-4 text-stone-400" aria-hidden="true" />
         </button>
       </div>
 
       {/* Waypoints */}
-      <div className="flex items-stretch gap-0 px-3 pb-2">
+      <div className="flex items-stretch gap-0 px-3 py-2.5">
         {/* Dot + line indicator */}
         <div className="flex flex-col items-center w-8 pt-3.5 pb-3.5 gap-0 flex-shrink-0" aria-hidden="true">
-          <div className="w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-emerald-100 flex-shrink-0" />
-          <div className="flex-1 w-0.5 bg-gradient-to-b from-emerald-300 to-red-300 my-1 min-h-[16px]" />
-          <div className="w-3 h-3 rounded-full bg-rose-500 ring-2 ring-rose-100 flex-shrink-0" />
+          <div className="w-2.5 h-2.5 rounded-full ring-2 ring-emerald-100 flex-shrink-0 bg-emerald-400" />
+          <div className="flex-1 w-px my-1 min-h-[16px]" style={{ background: "linear-gradient(to bottom, #34d399, #f87171)" }} />
+          <div className="w-2.5 h-2.5 rounded-full ring-2 ring-red-100 flex-shrink-0 bg-red-400" />
         </div>
 
         {/* Input rows */}
@@ -259,9 +289,8 @@ export default function NavigationPanel({
             value={from}
             placeholder="Choose start point…"
             icon={<MapPin className="h-3.5 w-3.5" />}
-            colorClass="text-emerald-600"
-            bgClass="bg-emerald-50"
-            borderClass="border-emerald-200"
+            accentColor="#059669"
+            accentBg="rgba(209,250,229,0.5)"
             buildings={buildings}
             onSelect={onSetFrom}
             onClear={onClearFrom}
@@ -270,9 +299,8 @@ export default function NavigationPanel({
             value={to}
             placeholder="Choose destination…"
             icon={<Flag className="h-3.5 w-3.5" />}
-            colorClass="text-rose-600"
-            bgClass="bg-rose-50"
-            borderClass="border-rose-200"
+            accentColor="#dc2626"
+            accentBg="rgba(254,226,226,0.5)"
             buildings={buildings}
             onSelect={onSetTo}
             onClear={onClearTo}
@@ -285,9 +313,9 @@ export default function NavigationPanel({
             onClick={onSwap}
             disabled={!from && !to}
             aria-label="Swap start and destination"
-            className="flex items-center justify-center w-8 h-8 rounded-xl bg-white border border-gray-200 shadow-sm hover:bg-indigo-50 hover:border-indigo-300 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            className="flex items-center justify-center w-8 h-8 rounded-xl bg-white border border-stone-200 shadow-sm hover:border-stone-300 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           >
-            <ArrowUpDown className="h-4 w-4 text-gray-500" aria-hidden="true" />
+            <ArrowUpDown className="h-3.5 w-3.5 text-stone-400" aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -295,55 +323,68 @@ export default function NavigationPanel({
       {/* Status / route summary */}
       <div className="px-4 pb-3 flex flex-col gap-2">
         {isLoading ? (
-          <div className="flex items-center gap-2.5 py-2 px-3 rounded-xl bg-indigo-50 border border-indigo-100">
+          <div
+            className="flex items-center gap-2.5 py-2 px-3 rounded-xl"
+            style={{ background: "oklch(0.32 0.09 155 / 0.06)", border: "1px solid oklch(0.32 0.09 155 / 0.12)" }}
+          >
             <div className="flex gap-1" aria-hidden="true">
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-bounce [animation-delay:0ms]" />
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-bounce [animation-delay:150ms]" />
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-bounce [animation-delay:300ms]" />
+              <span className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:0ms]" style={{ background: GREEN }} />
+              <span className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:150ms]" style={{ background: GREEN }} />
+              <span className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:300ms]" style={{ background: GREEN }} />
             </div>
-            <span className="text-xs font-medium text-indigo-700" aria-live="polite">Finding best route…</span>
+            <span className="text-xs font-medium" style={{ color: GREEN }} aria-live="polite">Finding best route…</span>
           </div>
         ) : bothSet && routeInfo ? (
           <>
             {/* Distance + time */}
-            <div className="flex items-center gap-3 py-2 px-3 rounded-xl bg-emerald-50 border border-emerald-100">
-              <div className="flex items-center gap-1.5 text-emerald-700">
+            <div
+              className="flex items-center gap-3 py-2 px-3 rounded-xl"
+              style={{
+                background: "oklch(0.32 0.09 155 / 0.06)",
+                border: "1px solid oklch(0.32 0.09 155 / 0.1)",
+              }}
+            >
+              <div className="flex items-center gap-1.5" style={{ color: GREEN }}>
                 <Clock className="h-3.5 w-3.5" aria-hidden="true" />
                 <span className="text-xs font-semibold">{formatDuration(routeInfo.duration)}</span>
               </div>
-              <div className="w-px h-3.5 bg-emerald-200" />
-              <div className="flex items-center gap-1.5 text-emerald-700">
+              <div className="w-px h-3.5 bg-stone-200" />
+              <div className="flex items-center gap-1.5" style={{ color: GREEN }}>
                 <Ruler className="h-3.5 w-3.5" aria-hidden="true" />
                 <span className="text-xs font-semibold">{formatDistance(routeInfo.distance)}</span>
               </div>
-              <span className="text-xs text-emerald-600 ml-auto">Walking</span>
+              <span className="text-xs text-stone-400 ml-auto">Walking</span>
             </div>
 
             {/* Steps toggle */}
             {routeInfo.steps.length > 0 && (
               <button
                 onClick={() => setStepsOpen((v) => !v)}
-                className="flex items-center gap-2 text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors px-1"
+                className="flex items-center gap-2 text-xs font-medium transition-colors px-1"
+                style={{ color: GREEN }}
               >
                 <CornerDownRight className="h-3.5 w-3.5" aria-hidden="true" />
-                {stepsOpen ? "Hide" : "Show"} turn-by-turn directions
+                {stepsOpen ? "Hide" : "Show"} turn-by-turn
                 {stepsOpen ? <ChevronUp className="h-3 w-3 ml-auto" /> : <ChevronDown className="h-3 w-3 ml-auto" />}
               </button>
             )}
 
             {stepsOpen && (
-              <ol className="flex flex-col gap-1 max-h-48 overflow-y-auto pr-1">
+              <ol className="flex flex-col gap-1 max-h-48 overflow-y-auto pr-1 scrollbar-hide">
                 {routeInfo.steps.map((step, i) => (
-                  <li key={i} className="flex items-start gap-2.5 py-1.5 px-2 rounded-lg even:bg-gray-50">
-                    <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <li key={i} className="flex items-start gap-2.5 py-1.5 px-2 rounded-lg even:bg-stone-50">
+                    <span
+                      className="w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5 text-white"
+                      style={{ background: GREEN }}
+                    >
                       {i + 1}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <span className="text-xs font-medium text-gray-800">
+                      <span className="text-xs font-medium text-stone-800">
                         {formatManeuver(step.maneuver)}
-                        {step.name ? <span className="text-gray-500"> onto <span className="text-gray-700">{step.name}</span></span> : null}
+                        {step.name ? <span className="text-stone-500"> onto <span className="text-stone-700">{step.name}</span></span> : null}
                       </span>
-                      <span className="block text-[10px] text-gray-400 mt-0.5">{formatDistance(step.distance)}</span>
+                      <span className="block text-[10px] text-stone-400 mt-0.5">{formatDistance(step.distance)}</span>
                     </div>
                   </li>
                 ))}
@@ -351,7 +392,7 @@ export default function NavigationPanel({
             )}
           </>
         ) : (
-          <p className="text-xs text-gray-400 py-1 px-1">
+          <p className="text-xs text-stone-400 py-1 px-1">
             {!from
               ? "Search for a start point above."
               : !to

@@ -2,8 +2,6 @@
 
 import { Building, Room } from "@/types";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Clock, Layers, Building2, FlaskConical, Users, X, Navigation, MapPin, Map } from "lucide-react";
 import { useEffect, useState } from "react";
 import FloorPlanViewer from "@/components/FloorPlanViewer";
@@ -16,13 +14,16 @@ interface BuildingSheetProps {
 }
 
 const typeConfig: Record<string, { bg: string; text: string; dot: string }> = {
-  lecture_hall: { bg: "bg-blue-50", text: "text-blue-700", dot: "bg-blue-500" },
-  lab: { bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-500" },
-  office: { bg: "bg-purple-50", text: "text-purple-700", dot: "bg-purple-500" },
-  default: { bg: "bg-gray-50", text: "text-gray-700", dot: "bg-gray-400" },
+  lecture_hall: { bg: "bg-blue-50", text: "text-blue-600", dot: "bg-blue-400" },
+  lab: { bg: "bg-teal-50", text: "text-teal-600", dot: "bg-teal-400" },
+  office: { bg: "bg-amber-50", text: "text-amber-600", dot: "bg-amber-400" },
+  default: { bg: "bg-stone-50", text: "text-stone-500", dot: "bg-stone-300" },
 };
 
 type Tab = "info" | "floorplan";
+
+const GREEN = "oklch(0.32 0.09 155)";
+const GREEN_LIGHT = "oklch(0.32 0.09 155 / 0.08)";
 
 export default function BuildingSheet({ building, onClose, onSetFrom, onSetTo }: BuildingSheetProps) {
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -34,7 +35,6 @@ export default function BuildingSheet({ building, onClose, onSetFrom, onSetTo }:
     const controller = new AbortController();
 
     if (!building) {
-      // Reset all derived state when building is deselected
       Promise.resolve().then(() => {
         if (!controller.signal.aborted) {
           setRooms([]);
@@ -46,7 +46,6 @@ export default function BuildingSheet({ building, onClose, onSetFrom, onSetTo }:
       return () => controller.abort();
     }
 
-    // Reset navigation state for the new building immediately via microtask
     Promise.resolve().then(() => {
       if (!controller.signal.aborted) {
         setSelectedFloor(1);
@@ -75,51 +74,64 @@ export default function BuildingSheet({ building, onClose, onSetFrom, onSetTo }:
       <SheetContent
         side="bottom"
         showCloseButton={false}
-        className="sm:!inset-y-0 sm:!right-0 sm:!left-auto sm:!bottom-auto sm:!w-[420px] sm:!max-w-[420px] sm:!h-full sm:!border-l sm:!border-t-0 sm:!rounded-none max-h-[85dvh] sm:max-h-full rounded-t-2xl overflow-hidden p-0"
+        className="sm:!inset-y-0 sm:!right-0 sm:!left-auto sm:!bottom-auto sm:!w-[400px] sm:!max-w-[400px] sm:!h-full sm:!border-l sm:!border-t-0 sm:!rounded-none max-h-[85dvh] sm:max-h-full rounded-t-3xl overflow-hidden p-0 border-0"
+        style={{ background: "#fafaf8" }}
       >
         {building && (
           <div className="flex flex-col h-full">
             {/* Drag handle - mobile only */}
             <div className="flex justify-center pt-3 pb-1 sm:hidden">
-              <div className="w-10 h-1 rounded-full bg-gray-300" />
+              <div className="w-10 h-1 rounded-full bg-stone-200" />
             </div>
 
             {/* Header */}
-            <SheetHeader className="px-5 pt-3 pb-4 sm:pt-5 border-b border-gray-100">
+            <SheetHeader className="px-5 pt-3 pb-4 sm:pt-5 border-b border-stone-100">
               <div className="flex items-start gap-3.5">
-                <div className="w-11 h-11 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm shadow-indigo-500/20">
+                {/* Building icon with initials */}
+                <div
+                  className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm"
+                  style={{ background: GREEN }}
+                >
                   <Building2 className="h-5 w-5 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <SheetTitle className="text-left text-lg font-semibold leading-tight truncate">
+                  <SheetTitle className="text-left text-base font-semibold leading-tight text-stone-900">
                     {building.name}
                   </SheetTitle>
-                  <div className="flex items-center gap-2 mt-1.5">
-                    <Badge variant="secondary" className="text-xs font-medium">
+                  <div className="flex items-center gap-2 mt-1">
+                    <span
+                      className="text-[11px] font-semibold px-2 py-0.5 rounded-md"
+                      style={{ background: GREEN_LIGHT, color: GREEN }}
+                    >
                       {building.shortName}
-                    </Badge>
+                    </span>
                   </div>
                 </div>
                 <button
                   onClick={onClose}
                   aria-label="Close building details"
-                  className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-gray-100 active:bg-gray-200 transition-colors flex-shrink-0"
+                  className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-stone-100 active:bg-stone-200 transition-colors flex-shrink-0"
                 >
-                  <X className="h-4 w-4 text-gray-500" aria-hidden="true" />
+                  <X className="h-4 w-4 text-stone-400" aria-hidden="true" />
                 </button>
               </div>
             </SheetHeader>
 
             {/* Direction buttons */}
             {(onSetFrom || onSetTo) && (
-              <div className="flex gap-2.5 px-5 py-3.5 border-b border-gray-100 bg-gray-50/60">
+              <div className="flex gap-2.5 px-4 py-3 border-b border-stone-100 bg-stone-50/60">
                 {onSetFrom && (
                   <button
                     onClick={() => { onSetFrom(building); }}
                     aria-label={`Set ${building.name} as start point`}
-                    className="flex-1 flex items-center justify-center gap-2 py-3 px-3 rounded-xl bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-600 active:scale-95 active:bg-emerald-700 shadow-sm shadow-emerald-500/20 transition-all"
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-sm font-semibold transition-all active:scale-95"
+                    style={{
+                      background: "oklch(0.4 0.15 155)",
+                      color: "white",
+                      boxShadow: "0 2px 8px oklch(0.4 0.15 155 / 0.25)",
+                    }}
                   >
-                    <MapPin className="h-4 w-4" aria-hidden="true" />
+                    <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
                     Start here
                   </button>
                 )}
@@ -127,9 +139,14 @@ export default function BuildingSheet({ building, onClose, onSetFrom, onSetTo }:
                   <button
                     onClick={() => { onSetTo(building); }}
                     aria-label={`Set ${building.name} as destination`}
-                    className="flex-1 flex items-center justify-center gap-2 py-3 px-3 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 active:scale-95 active:bg-indigo-800 shadow-sm shadow-indigo-500/20 transition-all"
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-sm font-semibold transition-all active:scale-95"
+                    style={{
+                      background: GREEN,
+                      color: "white",
+                      boxShadow: `0 2px 8px ${GREEN} 30%`,
+                    }}
                   >
-                    <Navigation className="h-4 w-4" aria-hidden="true" />
+                    <Navigation className="h-3.5 w-3.5" aria-hidden="true" />
                     Go here
                   </button>
                 )}
@@ -137,90 +154,85 @@ export default function BuildingSheet({ building, onClose, onSetFrom, onSetTo }:
             )}
 
             {/* Tab bar */}
-            <div className="flex gap-1 px-5 pt-3 pb-0 border-b border-gray-100">
-              <button
-                onClick={() => setActiveTab("info")}
-                className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-t-lg border-b-2 transition-all duration-150 ${
-                  activeTab === "info"
-                    ? "border-indigo-600 text-indigo-700 bg-indigo-50/50"
-                    : "border-transparent text-gray-400 hover:text-gray-600"
-                }`}
-                aria-selected={activeTab === "info"}
-                role="tab"
-              >
-                <Building2 className="h-3.5 w-3.5" aria-hidden="true" />
-                Info
-              </button>
-              <button
-                onClick={() => setActiveTab("floorplan")}
-                className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-t-lg border-b-2 transition-all duration-150 ${
-                  activeTab === "floorplan"
-                    ? "border-indigo-600 text-indigo-700 bg-indigo-50/50"
-                    : "border-transparent text-gray-400 hover:text-gray-600"
-                }`}
-                aria-selected={activeTab === "floorplan"}
-                role="tab"
-              >
-                <Map className="h-3.5 w-3.5" aria-hidden="true" />
-                Floor Plan
-              </button>
+            <div className="flex gap-0 px-4 pt-3 pb-0 border-b border-stone-100 bg-white/60">
+              {(["info", "floorplan"] as Tab[]).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`flex items-center gap-1.5 px-4 py-2 text-xs font-semibold border-b-2 transition-all duration-150 capitalize`}
+                  style={
+                    activeTab === tab
+                      ? { borderColor: GREEN, color: GREEN }
+                      : { borderColor: "transparent", color: "#9ca3af" }
+                  }
+                  aria-selected={activeTab === tab}
+                  role="tab"
+                >
+                  {tab === "info" ? <Building2 className="h-3.5 w-3.5" aria-hidden="true" /> : <Map className="h-3.5 w-3.5" aria-hidden="true" />}
+                  {tab === "info" ? "Info" : "Floor Plan"}
+                </button>
+              ))}
             </div>
 
             {/* Tab content */}
             {activeTab === "info" ? (
               <div className="flex-1 overflow-y-auto scrollbar-hide px-5 py-4 safe-bottom">
                 {building.description && (
-                  <p className="text-sm text-gray-500 leading-relaxed mb-4">{building.description}</p>
+                  <p className="text-sm text-stone-500 leading-relaxed mb-5 font-light">{building.description}</p>
                 )}
 
-                {/* Info cards row */}
-                <div className="grid grid-cols-2 gap-2.5 mb-5">
-                  <div className="flex items-center gap-2.5 p-3 rounded-xl bg-gray-50">
-                    <Clock className="h-4 w-4 text-indigo-500 flex-shrink-0" />
-                    <span className="text-xs font-medium text-gray-700 truncate">{building.hours}</span>
+                {/* Info cards */}
+                <div className="grid grid-cols-2 gap-2 mb-5">
+                  <div className="flex items-center gap-2.5 p-3 rounded-xl bg-white border border-stone-100">
+                    <Clock className="h-4 w-4 flex-shrink-0" style={{ color: GREEN }} />
+                    <span className="text-xs font-medium text-stone-700 truncate">{building.hours}</span>
                   </div>
-                  <div className="flex items-center gap-2.5 p-3 rounded-xl bg-gray-50">
-                    <Layers className="h-4 w-4 text-indigo-500 flex-shrink-0" />
-                    <span className="text-xs font-medium text-gray-700">{building.floors} floors</span>
+                  <div className="flex items-center gap-2.5 p-3 rounded-xl bg-white border border-stone-100">
+                    <Layers className="h-4 w-4 flex-shrink-0" style={{ color: GREEN }} />
+                    <span className="text-xs font-medium text-stone-700">{building.floors} floors</span>
                   </div>
                 </div>
 
                 {/* Facilities */}
-                <div className="mb-5">
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2.5">Facilities</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {building.facilities.map((f) => (
-                      <span
-                        key={f}
-                        className="inline-flex items-center px-2.5 py-1 rounded-lg bg-indigo-50 text-xs font-medium text-indigo-700 capitalize"
-                      >
-                        {f}
-                      </span>
-                    ))}
+                {building.facilities?.length > 0 && (
+                  <div className="mb-5">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-stone-400 mb-2.5">Facilities</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {building.facilities.map((f) => (
+                        <span
+                          key={f}
+                          className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium capitalize"
+                          style={{ background: GREEN_LIGHT, color: GREEN }}
+                        >
+                          {f}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {rooms.length > 0 && (
                   <>
-                    <Separator className="mb-5" />
+                    <div className="border-t border-stone-100 mb-5" />
 
                     <div>
                       <div className="flex items-center gap-2 mb-3">
-                        <FlaskConical className="h-4 w-4 text-indigo-500" />
-                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Rooms</p>
+                        <FlaskConical className="h-3.5 w-3.5" style={{ color: GREEN }} />
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-stone-400">Rooms</p>
                       </div>
 
-                      {/* Floor tabs - horizontal scroll on mobile */}
+                      {/* Floor tabs */}
                       <div className="flex gap-1.5 mb-4 overflow-x-auto scrollbar-hide pb-1">
                         {floors.map((f) => (
                           <button
                             key={f}
                             onClick={() => setSelectedFloor(f)}
-                            className={`px-3.5 py-1.5 text-xs rounded-lg font-semibold transition-all duration-200 flex-shrink-0 ${
+                            className="px-3 py-1.5 text-xs rounded-lg font-semibold transition-all duration-200 flex-shrink-0"
+                            style={
                               selectedFloor === f
-                                ? "bg-indigo-600 text-white shadow-sm shadow-indigo-500/25"
-                                : "bg-gray-100 text-gray-500 hover:bg-gray-200 active:bg-gray-200"
-                            }`}
+                                ? { background: GREEN, color: "white", boxShadow: "0 2px 6px oklch(0.32 0.09 155 / 0.3)" }
+                                : { background: "#f3f4f6", color: "#6b7280" }
+                            }
                           >
                             L{f}
                           </button>
@@ -228,10 +240,10 @@ export default function BuildingSheet({ building, onClose, onSetFrom, onSetTo }:
                       </div>
 
                       {/* Room cards */}
-                      <div className="space-y-2">
+                      <div className="space-y-1.5">
                         {floorRooms.length === 0 ? (
-                          <div className="text-center py-6">
-                            <p className="text-xs text-gray-400">No room data for this floor.</p>
+                          <div className="text-center py-8">
+                            <p className="text-xs text-stone-300">No room data for this floor.</p>
                           </div>
                         ) : (
                           floorRooms.map((room) => {
@@ -244,24 +256,24 @@ export default function BuildingSheet({ building, onClose, onSetFrom, onSetTo }:
                                   setActiveTab("floorplan");
                                   setSelectedFloor(room.floor);
                                 }}
-                                className="w-full flex items-center gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100/80 active:bg-gray-200/80 text-left transition-colors"
+                                className={`w-full flex items-center gap-3 p-3 rounded-xl bg-white border border-stone-100 hover:border-stone-200 active:bg-stone-50 text-left transition-colors`}
                                 aria-label={`View ${room.name} on floor plan`}
                               >
                                 <div className={`w-2 h-2 rounded-full flex-shrink-0 ${cfg.dot}`} />
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium text-gray-800 truncate">{room.name}</p>
+                                  <p className="text-sm font-medium text-stone-800 truncate">{room.name}</p>
                                   <div className="flex items-center gap-2 mt-0.5">
-                                    <span className={`text-xs font-medium capitalize ${cfg.text}`}>
+                                    <span className={`text-[11px] font-medium capitalize ${cfg.text}`}>
                                       {room.type.replace("_", " ")}
                                     </span>
-                                    <span className="text-gray-300">·</span>
-                                    <span className="text-xs text-gray-400 flex items-center gap-1">
+                                    <span className="text-stone-200">·</span>
+                                    <span className="text-[11px] text-stone-400 flex items-center gap-0.5">
                                       <Users className="h-3 w-3" />
                                       {room.capacity}
                                     </span>
                                   </div>
                                 </div>
-                                <Map className="h-3.5 w-3.5 text-gray-300 flex-shrink-0" aria-hidden="true" />
+                                <Map className="h-3.5 w-3.5 text-stone-200 flex-shrink-0" aria-hidden="true" />
                               </button>
                             );
                           })
@@ -280,18 +292,18 @@ export default function BuildingSheet({ building, onClose, onSetFrom, onSetTo }:
                     <button
                       key={f}
                       onClick={() => { setSelectedFloor(f); setSelectedRoomId(null); }}
-                      className={`px-3.5 py-1.5 text-xs rounded-lg font-semibold transition-all duration-200 flex-shrink-0 ${
+                      className="px-3 py-1.5 text-xs rounded-lg font-semibold transition-all duration-200 flex-shrink-0"
+                      style={
                         selectedFloor === f
-                          ? "bg-indigo-600 text-white shadow-sm shadow-indigo-500/25"
-                          : "bg-gray-100 text-gray-500 hover:bg-gray-200 active:bg-gray-200"
-                      }`}
+                          ? { background: GREEN, color: "white", boxShadow: "0 2px 6px oklch(0.32 0.09 155 / 0.3)" }
+                          : { background: "#f3f4f6", color: "#6b7280" }
+                      }
                     >
                       L{f}
                     </button>
                   ))}
                 </div>
 
-                {/* Floor plan viewer fills remaining space */}
                 <div className="flex-1 min-h-0">
                   <FloorPlanViewer
                     buildingId={building.id}
