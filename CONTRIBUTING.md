@@ -124,6 +124,8 @@ This is one of the easiest ways to contribute — no code needed!
 2. Add buildings for that campus to `public/data/buildings.json`
 3. Add room files under `public/data/rooms/`
 
+See [Making the map accurate and reusable](#making-the-map-accurate-and-reusable) below for tips on sourcing accurate polygon data.
+
 ## Code Conventions
 
 - **Framework:** Next.js 16 (App Router) with React 19
@@ -143,6 +145,46 @@ This is one of the easiest ways to contribute — no code needed!
 - Accessibility improvements
 - Translations (Malay / English)
 - Testing (unit + e2e)
+
+## Making the Map Accurate and Reusable
+
+This section explains how to ensure map data is accurate and how to structure contributions so PetaUiTM works well for any campus — not just UiTM Shah Alam.
+
+### Drawing Accurate Building Polygons
+
+1. **Use [geojson.io](https://geojson.io)** — enable the satellite layer and trace building outlines directly on the aerial imagery.
+2. **Cross-reference OpenStreetMap** — many UiTM campuses are already mapped on OSM. Use [Overpass Turbo](https://overpass-turbo.eu/) to query and export existing polygons:
+   ```
+   [out:json];
+   way["building"](around:1000, <lat>, <lng>);
+   out geom;
+   ```
+3. **Cross-reference official maps** — UiTM publishes campus maps on their faculty websites. Use them to verify building names and approximate shapes.
+4. If you're unsure about a polygon, open a PR anyway and note it as "needs verification" — someone with local knowledge can refine it.
+
+### Reporting Map Errors
+
+If you spot an inaccurate building outline or wrong label, [open an issue](https://github.com/muazhazali/petaUiTM/issues) using the **map error** label and include:
+- Campus name and building ID (visible in the URL as `?building=...`)
+- What's wrong (wrong shape, wrong name, wrong location)
+- A screenshot or coordinates if possible
+
+### Adding a Campus from Scratch
+
+To make onboarding a new campus as fast as possible:
+
+1. **Aim for completeness over perfection.** A campus with approximate polygons and correct building names is more useful than no campus at all.
+2. **One campus per PR** — keeps reviews focused and makes it easier to merge partial work.
+3. **Minimum viable campus entry:**
+   - `campuses.json`: `id`, `name`, `center` `[lng, lat]`, `zoom`, `bounds`
+   - `buildings.json`: at least `id`, `name`, `campus`, `coords`, `polygon` for each building
+4. Use the **MapEditor** (`/map-editor` route, WIP) to draw polygons interactively and export valid JSON.
+
+### Keeping Data Fresh
+
+- If a building is renamed or demolished, update `buildings.json` and open a PR.
+- Use the `lastUpdated` field (ISO date string) on each building entry to signal when data was last verified.
+- If you're a student or staff at a campus, you're the best person to keep that campus accurate — consider becoming a **campus maintainer** by noting it in your PR.
 
 ## Questions?
 
