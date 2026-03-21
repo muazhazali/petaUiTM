@@ -152,21 +152,4 @@ Single-page app — all views are state-driven overlays on the map canvas.
 
 ## Milestones
 
-### v0.7 — Navigation UX Improvements
-
-- [x] Walk time & distance display (surface OSRM `duration`/`distance` in NavigationPanel)
-- [x] Turn-by-turn directions step list (parse OSRM `steps` into a readable list)
-- [x] Share route link (copy current URL button in NavigationPanel)
-
-### v0.8 — Discovery & POI
-
-- [x] POI data schema (`data/pois.json`) — cafeteria, mosque, ATM, parking, bus stop
-- [x] POI layer rendered on map (custom emoji markers per category with popup)
-- [x] Category filter buttons (Food, Prayer, ATM, Parking, Bus, Clinic, Library)
-
-### v0.9 — Context & Orientation
-
-- [ ] Building entrance markers (static GeoJSON points in `buildings.json`)
-- [x] Persistent destination banner during map exploration when navigating
-
 ---
