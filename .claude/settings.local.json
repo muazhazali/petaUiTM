@@ -7,7 +7,22 @@
       "Bash(pnpm build:*)",
       "Bash(ls:*)",
       "Bash(pnpm exec:*)",
-      "Skill(update-config)"
+      "Skill(update-config)",
+      "WebSearch",
+      "WebFetch(domain:mapcarta.com)",
+      "WebFetch(domain:malaysia.worldplaces.me)",
+      "WebFetch(domain:foursquare.com)",
+      "WebFetch(domain:www.agoda.com)",
+      "WebFetch(domain:experience.arcgis.com)",
+      "WebFetch(domain:moovitapp.com)",
+      "WebFetch(domain:overpass-api.de)",
+      "WebFetch(domain:nominatim.openstreetmap.org)",
+      "WebFetch(domain:intekma-resort-convention-centre.kualalumpurs-hotels.com)",
+      "WebFetch(domain:en.planetofhotels.com)",
+      "WebFetch(domain:vymaps.com)",
+      "WebFetch(domain:www.tripadvisor.com)",
+      "WebFetch(domain:www.hrs.com)",
+      "WebFetch(domain:ipsis.uitm.edu.my)"
     ]
   }
 }
