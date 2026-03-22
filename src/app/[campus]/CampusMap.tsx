@@ -5,10 +5,9 @@ import dynamic from "next/dynamic";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Building, Campus, POI, POICategory } from "@/types";
 import BuildingSheet from "@/components/BuildingSheet";
-import SearchBar from "@/components/SearchBar";
 import NavigationPanel from "@/components/NavigationPanel";
-import POIFilter from "@/components/POIFilter";
-import { MapPin, ChevronLeft, Navigation } from "lucide-react";
+import BuildingList from "@/components/BuildingList";
+import { MapPin, ChevronLeft, Navigation, Map, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 export interface RouteStep {
@@ -102,6 +101,7 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
   const [pois, setPois] = useState<POI[]>([]);
   const [activeCategories, setActiveCategories] = useState<Set<POICategory>>(new Set());
+  const [showMap, setShowMap] = useState(false); // mobile toggle
 
   // Load POIs for this campus
   useEffect(() => {
@@ -167,7 +167,6 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
   const handleBuildingSelect = useCallback(
     (building: Building | null) => {
       if (navMode) {
-        // In nav mode, clicking a building sets it as "to" if from is set, else "from"
         if (!fromBuilding) {
           setFromBuilding(building);
           syncUrl(building, toBuilding, null, true);
@@ -175,7 +174,6 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
           setToBuilding(building);
           syncUrl(fromBuilding, building, null, true);
         } else {
-          // Both set — replace "to"
           setToBuilding(building);
           syncUrl(fromBuilding, building, null, true);
         }
@@ -222,22 +220,47 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
 
   return (
     <div className="h-[100dvh] w-screen flex flex-col overflow-hidden">
-      {/* Header */}
-      <header className="absolute top-0 left-0 right-0 z-10 safe-top pointer-events-none">
-        <div className="flex items-start gap-2 p-3 sm:p-4">
-          {/* Back button */}
-          <Link
-            href="/"
-            aria-label="Back to campus list"
-            className="pointer-events-auto map-panel rounded-xl px-2.5 py-2.5 sm:px-3 flex items-center gap-1.5 hover:shadow-xl active:scale-95 transition-all duration-200 flex-shrink-0 mt-0.5"
-          >
-            <ChevronLeft className="h-4 w-4 flex-shrink-0" style={{ color: "oklch(0.32 0.09 155)" }} aria-hidden="true" />
-            <span className="text-sm font-semibold text-stone-800 hidden sm:inline">PetaUiTM</span>
-          </Link>
+      {/* Slim header */}
+      <header
+        className="flex-shrink-0 flex items-center gap-3 px-4 border-b border-stone-100 safe-top"
+        style={{ height: "56px", background: "#fafaf8" }}
+      >
+        <Link
+          href="/"
+          aria-label="Back to campus list"
+          className="flex items-center gap-1 text-stone-600 hover:text-stone-900 transition-colors flex-shrink-0"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          <span className="text-sm font-medium hidden sm:inline">PetaUiTM</span>
+        </Link>
 
-          {/* Search or Nav panel - grows to fill */}
-          <div className="pointer-events-auto flex-1 min-w-0">
-            {navMode ? (
+        <div className="w-px h-4 bg-stone-200 flex-shrink-0 hidden sm:block" />
+
+        <span className="flex-1 text-sm font-semibold text-stone-800 truncate">{campus.name}</span>
+
+        {!navMode && (
+          <button
+            onClick={() => setNavMode(true)}
+            aria-label="Get directions"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:shadow-md active:scale-95 flex-shrink-0 text-white"
+            style={{ background: "oklch(0.32 0.09 155)" }}
+          >
+            <Navigation className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>Directions</span>
+          </button>
+        )}
+      </header>
+
+      {/* Body: list panel + map panel */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left panel — building list or nav panel */}
+        <div
+          className={`flex flex-col bg-[#fafaf8] border-r border-stone-100 z-10 relative
+                      w-full lg:w-[420px] lg:flex-shrink-0
+                      ${showMap ? "hidden lg:flex" : "flex"}`}
+        >
+          {navMode ? (
+            <div className="flex-1 overflow-y-auto">
               <NavigationPanel
                 buildings={buildings}
                 from={fromBuilding}
@@ -251,76 +274,71 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
                 onClearTo={() => { setToBuilding(null); syncUrl(fromBuilding, null, null, true); setRouteInfo(null); }}
                 onClose={handleCloseNav}
               />
-            ) : (
-              <div className="flex gap-2">
-                <div className="flex-1 min-w-0">
-                  <SearchBar buildings={buildings} onSelectBuilding={(b) => handleBuildingSelect(b)} />
-                </div>
-                {/* Directions button */}
-                <button
-                  onClick={() => setNavMode(true)}
-                  aria-label="Get directions"
-                  className="map-panel rounded-xl px-3 py-2.5 flex items-center gap-1.5 hover:shadow-xl active:scale-95 transition-all duration-200 flex-shrink-0"
-                  style={{ color: "oklch(0.32 0.09 155)" }}
-                >
-                  <Navigation className="h-4 w-4" aria-hidden="true" />
-                  <span className="text-sm font-semibold hidden sm:inline">Directions</span>
-                </button>
-              </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <BuildingList
+              buildings={buildings}
+              selectedBuilding={selectedBuilding}
+              onSelectBuilding={handleBuildingSelect}
+              navMode={navMode}
+              fromBuilding={fromBuilding}
+              toBuilding={toBuilding}
+              onSetFrom={handleSetFrom}
+              onSetTo={handleSetTo}
+              pois={pois}
+              activeCategories={activeCategories}
+              onCategoriesChange={setActiveCategories}
+            />
+          )}
+
+          {/* Mobile: Show Map FAB */}
+          {!navMode && (
+            <div className="lg:hidden absolute bottom-4 right-4 z-20">
+              <button
+                onClick={() => setShowMap(true)}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold text-white shadow-lg active:scale-95 transition-all"
+                style={{ background: "oklch(0.32 0.09 155)", boxShadow: "0 4px 16px oklch(0.32 0.09 155 / 0.4)" }}
+              >
+                <Map className="h-4 w-4" />
+                Show Map
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* POI filter bar — only in explore mode */}
-        {!navMode && (
-          <div className="pointer-events-auto px-3 sm:px-4 pb-2">
-            <POIFilter activeCategories={activeCategories} onChange={setActiveCategories} />
-          </div>
-        )}
-      </header>
+        {/* Right panel — map */}
+        <div
+          className={`flex-1 relative
+                      hidden lg:block
+                      ${showMap ? "!block fixed inset-0 z-40" : ""}`}
+        >
+          {/* Mobile: back to list button */}
+          {showMap && (
+            <button
+              onClick={() => setShowMap(false)}
+              className="lg:hidden absolute top-4 left-4 z-50 flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold shadow-lg active:scale-95 transition-all"
+              style={{ background: "rgba(255,255,255,0.95)", color: "oklch(0.32 0.09 155)", backdropFilter: "blur(8px)" }}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              List
+            </button>
+          )}
 
-      {/* Map */}
-      <div className="flex-1 relative">
-        <MapComponent
-          campus={campus}
-          buildings={buildings}
-          selectedBuilding={navMode ? null : selectedBuilding}
-          onBuildingSelect={handleBuildingSelect}
-          routeGeoJSON={routeGeoJSON}
-          fromBuilding={fromBuilding}
-          toBuilding={toBuilding}
-          pois={pois}
-          activeCategories={activeCategories}
-        />
+          <MapComponent
+            campus={campus}
+            buildings={buildings}
+            selectedBuilding={navMode ? null : selectedBuilding}
+            onBuildingSelect={handleBuildingSelect}
+            routeGeoJSON={routeGeoJSON}
+            fromBuilding={fromBuilding}
+            toBuilding={toBuilding}
+            pois={pois}
+            activeCategories={activeCategories}
+          />
+        </div>
       </div>
 
-      {/* Persistent navigation destination banner */}
-      {navMode && toBuilding && (
-        <div className="absolute bottom-0 left-0 right-0 z-10 safe-bottom pointer-events-none">
-          <div className="mx-3 mb-3 sm:mx-4 sm:mb-4 pointer-events-auto">
-            <div
-              className="flex items-center gap-2.5 px-4 py-3 rounded-2xl text-white shadow-lg"
-              style={{ background: "oklch(0.32 0.09 155)", boxShadow: "0 8px 32px oklch(0.32 0.09 155 / 0.35)" }}
-            >
-              <Navigation className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
-              <div className="flex-1 min-w-0">
-                <span className="text-[10px] font-medium uppercase tracking-wider opacity-70 block leading-none mb-0.5">Navigating to</span>
-                <span className="text-sm font-semibold truncate block">{toBuilding.name}</span>
-              </div>
-              {routeInfo && (
-                <span
-                  className="text-xs font-semibold flex-shrink-0 px-2 py-1 rounded-lg"
-                  style={{ background: "rgba(255,255,255,0.15)" }}
-                >
-                  ~{Math.round(routeInfo.duration / 60)} min
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Building info sheet */}
+      {/* Building info sheet — unchanged */}
       <BuildingSheet
         building={navMode ? null : selectedBuilding}
         onClose={() => setSelectedBuilding(null)}

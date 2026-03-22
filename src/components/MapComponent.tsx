@@ -52,6 +52,7 @@ export default function MapComponent({
   const fromMarkerRef = useRef<maplibregl.Marker | null>(null);
   const toMarkerRef = useRef<maplibregl.Marker | null>(null);
   const poiMarkersRef = useRef<maplibregl.Marker[]>([]);
+  const buildingMarkersRef = useRef<maplibregl.Marker[]>([]);
 
   const handleBuildingClick = useCallback(
     (buildingId: string) => {
@@ -164,7 +165,7 @@ export default function MapComponent({
           "text-halo-color": "#ffffff",
           "text-halo-width": 2,
         },
-        minzoom: 15,
+        minzoom: 99,
       });
 
       // Route source (empty initially)
@@ -179,6 +180,43 @@ export default function MapComponent({
         source: "route",
         layout: { "line-join": "round", "line-cap": "round" },
         paint: { "line-color": "#6366f1", "line-width": 5, "line-opacity": 0.9 },
+      });
+
+      // Building pill markers
+      buildings.forEach((b) => {
+        const outer = document.createElement("div");
+        outer.dataset.buildingId = b.id;
+        outer.style.cursor = "pointer";
+
+        const pill = document.createElement("div");
+        pill.className = "marker-pill";
+        pill.textContent = b.shortName;
+        pill.style.cssText = [
+          "padding: 3px 8px",
+          "border-radius: 999px",
+          "font-size: 10px",
+          "font-weight: 700",
+          "color: white",
+          "background: oklch(0.32 0.09 155)",
+          "border: 1.5px solid white",
+          "box-shadow: 0 2px 6px rgba(0,0,0,0.25)",
+          "white-space: nowrap",
+          "user-select: none",
+          "transition: background 0.15s",
+        ].join(";");
+
+        outer.appendChild(pill);
+        outer.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const building = buildings.find((bld) => bld.id === b.id);
+          if (building) onBuildingSelect(building);
+        });
+
+        const marker = new maplibregl.Marker({ element: outer, anchor: "bottom" })
+          .setLngLat([b.coords[1], b.coords[0]])
+          .addTo(map);
+
+        buildingMarkersRef.current.push(marker);
       });
 
       // Hover state
@@ -247,6 +285,25 @@ export default function MapComponent({
       center: [selectedBuilding.coords[1], selectedBuilding.coords[0]],
       zoom: Math.max(map.getZoom(), 17),
       duration: 800,
+    });
+  }, [selectedBuilding]);
+
+  // Update building marker selected state
+  useEffect(() => {
+    buildingMarkersRef.current.forEach((marker) => {
+      const outer = marker.getElement();
+      const pill = outer.querySelector(".marker-pill") as HTMLElement | null;
+      if (!pill) return;
+      const id = outer.dataset.buildingId;
+      if (id === selectedBuilding?.id) {
+        pill.style.background = "#6366f1";
+        pill.style.boxShadow = "0 2px 10px rgba(99,102,241,0.5)";
+        outer.style.zIndex = "10";
+      } else {
+        pill.style.background = "oklch(0.32 0.09 155)";
+        pill.style.boxShadow = "0 2px 6px rgba(0,0,0,0.25)";
+        outer.style.zIndex = "1";
+      }
     });
   }, [selectedBuilding]);
 
