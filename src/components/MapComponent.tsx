@@ -90,7 +90,7 @@ export default function MapComponent({
       zoom: campus.zoom,
     });
 
-    map.addControl(new maplibregl.NavigationControl(), "bottom-right");
+    map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "bottom-right");
     map.addControl(
       new maplibregl.GeolocateControl({
         positionOptions: { enableHighAccuracy: true },
@@ -159,13 +159,13 @@ export default function MapComponent({
           "text-field": ["get", "shortName"],
           "text-size": 12,
           "text-anchor": "center",
+          visibility: "none",
         },
         paint: {
           "text-color": "#4338ca",
           "text-halo-color": "#ffffff",
           "text-halo-width": 2,
         },
-        minzoom: 99,
       });
 
       // Route source (empty initially)
