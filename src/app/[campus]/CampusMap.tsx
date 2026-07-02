@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, Suspense } from "react";
+import { useState, useEffect, useCallback, useSyncExternalStore, Suspense } from "react";
 import dynamic from "next/dynamic";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Building, Campus, POI, POICategory } from "@/types";
@@ -17,9 +17,8 @@ export interface RouteStep {
   duration: number; // seconds
 }
 
-const MapComponent = dynamic(() => import("@/components/MapComponent"), {
-  ssr: false,
-  loading: () => (
+function MapLoading() {
+  return (
     <div className="w-full h-full bg-[#eef4f0] flex items-center justify-center">
       <div className="flex flex-col items-center gap-4 animate-fade-in">
         <div
@@ -38,8 +37,30 @@ const MapComponent = dynamic(() => import("@/components/MapComponent"), {
         </div>
       </div>
     </div>
-  ),
+  );
+}
+
+const Map3D = dynamic(() => import("@/components/Map3D"), {
+  ssr: false,
+  loading: () => <MapLoading />,
 });
+
+const MapComponent = dynamic(() => import("@/components/MapComponent"), {
+  ssr: false,
+  loading: () => <MapLoading />,
+});
+
+// Hydration-safe "has the client mounted" check: false during SSR and the
+// first client render, true afterwards. Keeps the dynamic map components out
+// of hydration entirely so server and client HTML always match.
+const emptySubscribe = () => () => {};
+function useHydrated() {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
+}
 
 interface CampusMapProps {
   campus: Campus;
@@ -91,6 +112,7 @@ async function fetchRoute(
 function CampusMapInner({ campus, buildings }: CampusMapProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const hydrated = useHydrated();
 
   const [selectedBuilding, setSelectedBuilding] = useState<Building | null>(null);
   const [navMode, setNavMode] = useState(false);
@@ -102,6 +124,7 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
   const [pois, setPois] = useState<POI[]>([]);
   const [activeCategories, setActiveCategories] = useState<Set<POICategory>>(new Set());
   const [showMap, setShowMap] = useState(false); // mobile toggle
+  const [is3D, setIs3D] = useState(false);
 
   // Load POIs for this campus
   useEffect(() => {
@@ -324,17 +347,46 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
             </button>
           )}
 
-          <MapComponent
-            campus={campus}
-            buildings={buildings}
-            selectedBuilding={navMode ? null : selectedBuilding}
-            onBuildingSelect={handleBuildingSelect}
-            routeGeoJSON={routeGeoJSON}
-            fromBuilding={fromBuilding}
-            toBuilding={toBuilding}
-            pois={pois}
-            activeCategories={activeCategories}
-          />
+          {!hydrated ? (
+            <MapLoading />
+          ) : is3D ? (
+            <Map3D
+              campus={campus}
+              buildings={buildings}
+              selectedBuilding={navMode ? null : selectedBuilding}
+              onBuildingSelect={handleBuildingSelect}
+              routeGeoJSON={routeGeoJSON}
+            />
+          ) : (
+            <MapComponent
+              campus={campus}
+              buildings={buildings}
+              selectedBuilding={navMode ? null : selectedBuilding}
+              onBuildingSelect={handleBuildingSelect}
+              routeGeoJSON={routeGeoJSON}
+              fromBuilding={fromBuilding}
+              toBuilding={toBuilding}
+              pois={pois}
+              activeCategories={activeCategories}
+            />
+          )}
+
+          {/* 2D / 3D view toggle */}
+          {hydrated && (
+            <button
+              onClick={() => setIs3D((v) => !v)}
+              aria-label={is3D ? "Switch to 2D map" : "Switch to 3D view"}
+              aria-pressed={is3D}
+              className="absolute top-4 right-4 z-50 px-3.5 py-2 rounded-xl text-sm font-bold shadow-lg active:scale-95 transition-all"
+              style={{
+                background: is3D ? "oklch(0.32 0.09 155)" : "rgba(255,255,255,0.95)",
+                color: is3D ? "white" : "oklch(0.32 0.09 155)",
+                backdropFilter: "blur(8px)",
+              }}
+            >
+              {is3D ? "2D" : "3D"}
+            </button>
+          )}
         </div>
       </div>
 
