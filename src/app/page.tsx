@@ -76,7 +76,7 @@ export default async function Home() {
         style={{
           position: "relative",
           zIndex: 1,
-          maxWidth: 640,
+          maxWidth: 860,
           margin: "0 auto",
           padding: "clamp(12px, 3.5vh, 36px) clamp(20px, 5vw, 40px)",
           display: "flex",
@@ -95,12 +95,12 @@ export default async function Home() {
           }}
         >
           {/* Logo */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
             <div
               style={{
-                width: 34,
-                height: 34,
-                borderRadius: 9,
+                width: 38,
+                height: 38,
+                borderRadius: 10,
                 background: "#17245B",
                 display: "flex",
                 alignItems: "center",
@@ -108,11 +108,11 @@ export default async function Home() {
                 flexShrink: 0,
               }}
             >
-              <MapPin style={{ width: 15, height: 15, color: "#F5BF32" }} strokeWidth={2.2} />
+              <MapPin style={{ width: 17, height: 17, color: "#F5BF32" }} strokeWidth={2.2} />
             </div>
             <span
               style={{
-                fontSize: 15,
+                fontSize: 17,
                 fontWeight: 600,
                 color: "#17245B",
                 letterSpacing: "-0.02em",
@@ -129,7 +129,7 @@ export default async function Home() {
             rel="noopener noreferrer"
             className="github-btn"
           >
-            <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 13, height: 13 }} aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 15, height: 15 }} aria-hidden="true">
               <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.295-1.552 3.295-1.23 3.295-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
             </svg>
             GitHub
@@ -142,11 +142,11 @@ export default async function Home() {
             <h1
               style={{
                 fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
-                fontSize: "clamp(2.2rem, 6.5vh, 3.4rem)",
+                fontSize: "clamp(2.7rem, 7.5vh, 4.5rem)",
                 lineHeight: 1.06,
                 letterSpacing: "-0.02em",
                 color: "#17245B",
-                marginBottom: 14,
+                marginBottom: 16,
                 fontWeight: 400,
               }}
             >
@@ -157,10 +157,10 @@ export default async function Home() {
 
             <p
               style={{
-              fontSize: 15,
+              fontSize: 18,
               lineHeight: 1.6,
               color: "#4C5370",
-              maxWidth: 400,
+              maxWidth: 520,
                 fontWeight: 300,
                 marginBottom: 0,
               }}
@@ -176,38 +176,38 @@ export default async function Home() {
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(3, 1fr)",
-            gap: 8,
-            marginBottom: "clamp(14px, 3vh, 24px)",
+            gap: 12,
+            marginBottom: "clamp(16px, 3.5vh, 28px)",
           }}
         >
           {FEATURES.map(({ icon: Icon, label, detail }) => (
             <div
               key={label}
               style={{
-                padding: "10px 12px",
-                borderRadius: 12,
+                padding: "16px 18px",
+                borderRadius: 14,
                 border: "1px solid #DBE0F1",
                 background: "rgba(255,255,255,0.7)",
               }}
             >
               <div
                 style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: 7,
+                  width: 36,
+                  height: 36,
+                  borderRadius: 9,
                   background: "rgba(91,38,123,0.1)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  marginBottom: 6,
+                  marginBottom: 10,
                 }}
               >
-                <Icon style={{ width: 14, height: 14, color: "#5B267B" }} />
+                <Icon style={{ width: 18, height: 18, color: "#5B267B" }} />
               </div>
-              <p style={{ fontSize: 12, fontWeight: 600, color: "#17245B", marginBottom: 2 }}>
+              <p style={{ fontSize: 15, fontWeight: 600, color: "#17245B", marginBottom: 3 }}>
                 {label}
               </p>
-              <p style={{ fontSize: 11, color: "#6B7399", lineHeight: 1.4 }}>{detail}</p>
+              <p style={{ fontSize: 13, color: "#6B7399", lineHeight: 1.45 }}>{detail}</p>
             </div>
           ))}
         </div>
@@ -215,7 +215,7 @@ export default async function Home() {
         {/* ── Campus list ── */}
         <div
           className="stagger-children"
-          style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: "clamp(12px, 2.5vh, 20px)" }}
+          style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: "clamp(14px, 3vh, 24px)" }}
         >
           {campuses.map((campus, i) => (
             <Link
@@ -227,16 +227,16 @@ export default async function Home() {
               {/* Number */}
               <div
                 style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 10,
+                  width: 52,
+                  height: 52,
+                  borderRadius: 13,
                   background: "#17245B",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   flexShrink: 0,
                   fontFamily: "var(--font-dm-serif), Georgia, serif",
-                  fontSize: 17,
+                  fontSize: 21,
                   fontWeight: 700,
                   color: "#F5BF32",
                   transition: "transform 0.25s ease",
@@ -250,17 +250,17 @@ export default async function Home() {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p
                   style={{
-                    fontSize: 15,
+                    fontSize: 18,
                     fontWeight: 600,
                     color: "#17245B",
-                    marginBottom: 2,
+                    marginBottom: 3,
                     transition: "color 0.2s",
                   }}
                   className="card-title"
                 >
                   UiTM {campus.name}
                 </p>
-                <p style={{ fontSize: 12, color: "#6B7399" }}>
+                <p style={{ fontSize: 14, color: "#6B7399" }}>
                   {campus.state}
                   {campus.buildingCount ? ` · ${campus.buildingCount}+ buildings` : ""}
                 </p>
@@ -269,9 +269,9 @@ export default async function Home() {
               {/* Arrow */}
               <div
                 style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 8,
+                  width: 44,
+                  height: 44,
+                  borderRadius: 11,
                   background: "rgba(91,38,123,0.08)",
                   display: "flex",
                   alignItems: "center",
@@ -282,7 +282,7 @@ export default async function Home() {
                 }}
                 className="card-arrow"
               >
-                <ArrowRight style={{ width: 15, height: 15 }} />
+                <ArrowRight style={{ width: 19, height: 19 }} />
               </div>
             </Link>
           ))}
@@ -343,9 +343,9 @@ export default async function Home() {
         .campus-card {
           display: flex;
           align-items: center;
-          gap: 14px;
-          padding: 10px 14px;
-          border-radius: 12px;
+          gap: 16px;
+          padding: 15px 20px;
+          border-radius: 14px;
           border: 1px solid #DBE0F1;
           background: rgba(255,255,255,0.75);
           text-decoration: none;
@@ -375,21 +375,21 @@ export default async function Home() {
 
         @media (max-width: 480px) {
           .campus-card {
-            padding: 9px 12px;
-            border-radius: 11px;
+            padding: 12px 14px;
+            border-radius: 12px;
           }
         }
 
         .github-btn {
           display: flex;
           align-items: center;
-          gap: 5px;
-          font-size: 12px;
+          gap: 6px;
+          font-size: 13px;
           font-weight: 500;
           color: #4C5370;
           text-decoration: none;
-          padding: 6px 12px;
-          border-radius: 8px;
+          padding: 8px 14px;
+          border-radius: 9px;
           border: 1px solid #DBE0F1;
           background: rgba(255,255,255,0.7);
           transition: border-color 0.2s, color 0.2s;

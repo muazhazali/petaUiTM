@@ -15,3 +15,9 @@ overrides:
 auditConfig:
   ignoreGhsas:
     - GHSA-vfj7-8cjw-p6xm
+
+minimumReleaseAgeExclude:
+  - electron-to-chromium
+
+allowBuilds:
+  unrs-resolver: false
