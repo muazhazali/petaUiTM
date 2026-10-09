@@ -1,4 +1,4 @@
-@import 'maplibre-gl/dist/maplibre-gl.css';
+@import 'leaflet/dist/leaflet.css';
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -283,4 +283,57 @@
   background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
+}
+
+/* ── Leaflet overrides ─────────────────────────────────────────────────── */
+
+.leaflet-container {
+  font-family: inherit;
+  background: #eef4f0;
+}
+
+/* Clear default divIcon styling for custom markers */
+.marker-pill-wrapper,
+.marker-dot-wrapper,
+.marker-poi-wrapper,
+.editor-vertex-wrap {
+  background: none;
+  border: none;
+}
+
+.marker-pill-wrapper,
+.marker-dot-wrapper {
+  width: auto !important;
+  height: auto !important;
+}
+
+/* Popup styling to match glass panels */
+.leaflet-popup-content-wrapper {
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(13, 43, 26, 0.12), 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.leaflet-popup-content {
+  margin: 10px 14px;
+  line-height: 1.45;
+}
+
+/* Editor vertex dots */
+.editor-vertex {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #f59e0b;
+  border: 2.5px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  cursor: grab;
+  transition: background 0.1s, transform 0.1s;
+}
+.editor-vertex:hover {
+  background: #ef4444;
+  transform: scale(1.15);
+  cursor: grab;
+}
+.editor-vertex:active {
+  cursor: grabbing;
 }

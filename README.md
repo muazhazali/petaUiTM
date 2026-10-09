@@ -1,6 +1,6 @@
 # PetaUiTM
 
-An open-source interactive campus map for Universiti Teknologi MARA (UiTM). Built with Next.js and MapLibre GL JS, it provides building information, fuzzy search, indoor floor plans, and walking navigation — all as a static app with no backend.
+An open-source interactive campus map for Universiti Teknologi MARA (UiTM). Built with Next.js and Leaflet, it provides building information, fuzzy search, indoor floor plans, and walking navigation — all as a static app with no backend, no API keys, and no paid services.
 
 **Live demo:** https://petauitm.vercel.app
 
@@ -24,10 +24,10 @@ An open-source interactive campus map for Universiti Teknologi MARA (UiTM). Buil
 | Concern         | Choice                        |
 |-----------------|-------------------------------|
 | Framework       | Next.js 15 (App Router, SSG)  |
-| Map renderer    | MapLibre GL JS                |
-| Tile source     | CARTO raster tiles            |
+| Map renderer    | Leaflet                       |
+| Tile source     | OpenStreetMap (free, no key)  |
 | Search          | Fuse.js (client-side)         |
-| Outdoor routing | OSRM demo API                 |
+| Outdoor routing | OSRM demo API (free)          |
 | Indoor routing  | Custom A* (client-side)       |
 | Floor plans     | Static SVG files              |
 | Data            | Static JSON in `public/data/` |

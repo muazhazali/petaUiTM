@@ -2,8 +2,9 @@
 
 import "./editor.css";
 import { useEffect, useRef, useState, useCallback } from "react";
-import maplibregl from "maplibre-gl";
+import L from "leaflet";
 import { Building } from "@/types";
+import Link from "next/link";
 import {
   Download, Plus, Trash2, ChevronDown, ChevronRight,
   MapPin, Edit3, Undo2, Redo2, Check, X, Pencil, MousePointer2, HelpCircle,
@@ -51,71 +52,20 @@ function newBuilding(campus: string): Building {
   };
 }
 
-// ─── GeoJSON builders ─────────────────────────────────────────────────────────
-
-function buildingsGeoJSON(buildings: Building[], selId: string | null, editId: string | null): GeoJSON.FeatureCollection {
-  return {
-    type: "FeatureCollection",
-    features: buildings.filter((b) => b.polygon.length >= 3).map((b) => ({
-      type: "Feature", id: b.id,
-      properties: { id: b.id, name: b.name, shortName: b.shortName, selected: +(b.id === selId), editing: +(b.id === editId) },
-      geometry: { type: "Polygon", coordinates: [closedRing(b.polygon)] },
-    })),
-  };
-}
-
-function verticesGeoJSON(pts: [number, number][], hov: number | null): GeoJSON.FeatureCollection {
-  const open = openRing(pts);
-  return {
-    type: "FeatureCollection",
-    features: open.map(([lng, lat], i) => ({
-      type: "Feature", id: i,
-      properties: { idx: i, hovered: +(hov === i) },
-      geometry: { type: "Point", coordinates: [lng, lat] },
-    })),
-  };
-}
-
-function midpointsGeoJSON(pts: [number, number][], hov: number | null): GeoJSON.FeatureCollection {
-  const open = openRing(pts);
-  if (open.length < 2) return { type: "FeatureCollection", features: [] };
-  return {
-    type: "FeatureCollection",
-    features: open.map((p, i) => {
-      const next = (i + 1) % open.length;
-      const [lng, lat] = midpoint(p, open[next]);
-      return {
-        type: "Feature", id: i,
-        properties: { edgeIdx: i, hovered: +(hov === i) },
-        geometry: { type: "Point", coordinates: [lng, lat] },
-      };
-    }),
-  };
-}
-
-function editRingGeoJSON(pts: [number, number][]): GeoJSON.FeatureCollection {
-  if (pts.length < 2) return { type: "FeatureCollection", features: [] };
-  return {
-    type: "FeatureCollection",
-    features: [{ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: closedRing(pts) } }],
-  };
-}
-
-function drawPreviewGeoJSON(pts: [number, number][], cursor: [number, number] | null): GeoJSON.FeatureCollection {
-  const features: GeoJSON.Feature[] = [];
-  const all = cursor ? [...pts, cursor] : pts;
-  if (all.length >= 2) features.push({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: all } });
-  if (pts.length >= 3) features.push({ type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [closedRing(pts)] } });
-  return { type: "FeatureCollection", features };
-}
-
 // ─── component ────────────────────────────────────────────────────────────────
 
 type EditorMode = "select" | "draw" | "edit";
 
 export default function MapEditor() {
-  const mapRef = useRef<maplibregl.Map | null>(null);
+  const mapRef = useRef<L.Map | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const buildingsLayerRef = useRef<L.GeoJSON | null>(null);
+  const ringLayerRef = useRef<L.Polyline | null>(null);
+  const previewLineRef = useRef<L.Polyline | null>(null);
+  const previewFillRef = useRef<L.Polygon | null>(null);
+  const vertexMarkersRef = useRef<L.Marker[]>([]);
+  const midpointMarkersRef = useRef<L.CircleMarker[]>([]);
 
   const undoRef = useRef<Building[][]>([]);
   const redoRef = useRef<Building[][]>([]);
@@ -180,27 +130,154 @@ export default function MapEditor() {
     setBuildings((prev) => { if (withUndo) pushUndo(prev); return fn(prev); });
   }, [pushUndo]);
 
+  // live vertex drag: update building polygon; undo snapshot pushed at dragstart
+  const onDragVertex = useCallback((idx: number, pos: [number, number]) => {
+    const id = selIdRef.current; if (!id) return;
+    setBuildings((prev) => prev.map((b) => {
+      if (b.id !== id) return b;
+      const pts = openRing([...b.polygon]);
+      pts[idx] = pos;
+      return { ...b, polygon: pts, coords: [centroid(pts)[1], centroid(pts)[0]] };
+    }));
+  }, []);
+
   // ── refresh map ────────────────────────────────────────────────────────────
+
+  const vertexIcon = useCallback((hovered: boolean) =>
+    L.divIcon({
+      className: "editor-vertex-wrap",
+      html: `<div class="editor-vertex${hovered ? " hovered" : ""}"></div>`,
+      iconSize: [14, 14],
+      iconAnchor: [7, 7],
+    }), []);
 
   const refreshMap = useCallback(() => {
     const map = mapRef.current;
-    if (!map || !map.isStyleLoaded()) return;
+    if (!map || !mapLoaded) return;
     const editId = modeRef.current !== "select" ? selIdRef.current : null;
 
-    (map.getSource("buildings") as maplibregl.GeoJSONSource)?.setData(
-      buildingsGeoJSON(buildingsRef.current, selIdRef.current, editId));
+    // buildings geojson
+    const fc: GeoJSON.FeatureCollection = {
+      type: "FeatureCollection",
+      features: buildingsRef.current.filter((b) => b.polygon.length >= 3).map((b) => ({
+        type: "Feature",
+        properties: { id: b.id, name: b.name, shortName: b.shortName, selected: +(b.id === selIdRef.current), editing: +(b.id === editId) },
+        geometry: { type: "Polygon", coordinates: [closedRing(b.polygon)] },
+      })),
+    };
+    const layer = buildingsLayerRef.current;
+    if (layer) {
+      layer.clearLayers();
+      layer.addData(fc);
+    }
 
+    // ring + vertex + midpoint overlays
     const editB = editId ? buildingsRef.current.find((b) => b.id === editId) : null;
     const ring = modeRef.current === "draw" ? drawPtsRef.current : editB ? openRing(editB.polygon) : [];
 
-    (map.getSource("edit-ring") as maplibregl.GeoJSONSource)?.setData(editRingGeoJSON(ring));
-    (map.getSource("vertices") as maplibregl.GeoJSONSource)?.setData(
-      modeRef.current !== "select" ? verticesGeoJSON(ring, hovVRef.current) : { type: "FeatureCollection", features: [] });
-    (map.getSource("midpoints") as maplibregl.GeoJSONSource)?.setData(
-      modeRef.current === "edit" ? midpointsGeoJSON(ring, hovMRef.current) : { type: "FeatureCollection", features: [] });
-    (map.getSource("draw-preview") as maplibregl.GeoJSONSource)?.setData(
-      modeRef.current === "draw" ? drawPreviewGeoJSON(drawPtsRef.current, cursorRef.current) : { type: "FeatureCollection", features: [] });
-  }, []);
+    ringLayerRef.current?.setLatLngs(ring.length >= 2 ? (closedRing(ring) as L.LatLngExpression[]) : []);
+
+    vertexMarkersRef.current.forEach((m) => m.remove());
+    vertexMarkersRef.current = [];
+    if (modeRef.current !== "select") {
+      const open = openRing(ring);
+      open.forEach(([lng, lat], i) => {
+        const m = L.marker([lat, lng], {
+          icon: vertexIcon(hovVRef.current === i),
+          draggable: modeRef.current === "edit",
+          keyboard: false,
+          zIndexOffset: 400,
+        }).addTo(map);
+        m.on("dragstart", () => {
+          draggingRef.current = i;
+          pushUndo(buildingsRef.current); // snapshot before mutating
+          map.dragging.disable();
+        });
+        m.on("drag", (e) => {
+          const p = (e.target as L.Marker).getLatLng();
+          onDragVertex(i, [p.lng, p.lat]);
+        });
+        m.on("dragend", () => {
+          draggingRef.current = null;
+          map.dragging.enable();
+        });
+        m.on("mouseover", () => {
+          if (draggingRef.current !== null) return;
+          if (hovVRef.current !== i) { hovVRef.current = i; hovMRef.current = null; refreshMap(); }
+          map.getContainer().style.cursor = "grab";
+        });
+        m.on("mouseout", () => {
+          if (draggingRef.current !== null) return;
+          if (hovVRef.current === i) { hovVRef.current = null; refreshMap(); }
+          map.getContainer().style.cursor = "";
+        });
+        m.on("click", (e) => {
+          L.DomEvent.stopPropagation(e);
+          if (modeRef.current !== "edit") return;
+          if (draggingRef.current !== null) return;
+          const id = selIdRef.current; if (!id) return;
+          updBuildings((prev) => prev.map((b) => {
+            if (b.id !== id) return b;
+            const pts = openRing([...b.polygon]);
+            if (pts.length <= 3) return b;
+            pts.splice(i, 1);
+            return { ...b, polygon: pts };
+          }));
+          hovVRef.current = null;
+        });
+        vertexMarkersRef.current.push(m);
+      });
+    }
+
+    midpointMarkersRef.current.forEach((m) => m.remove());
+    midpointMarkersRef.current = [];
+    if (modeRef.current === "edit" && ring.length >= 2) {
+      const open = openRing(ring);
+      open.forEach((p, i) => {
+        const next = (i + 1) % open.length;
+        const [lng, lat] = midpoint(p, open[next]);
+        const m = L.circleMarker([lat, lng], {
+          radius: hovMRef.current === i ? 6 : 4,
+          color: "#f59e0b",
+          weight: hovMRef.current === i ? 2.5 : 1.5,
+          fillColor: "#ffffff",
+          fillOpacity: hovMRef.current === i ? 1 : 0.55,
+        }).addTo(map);
+        m.on("mouseover", () => {
+          if (hovMRef.current !== i) { hovMRef.current = i; hovVRef.current = null; refreshMap(); }
+          map.getContainer().style.cursor = "copy";
+        });
+        m.on("mouseout", () => {
+          if (hovMRef.current === i) { hovMRef.current = null; refreshMap(); }
+          map.getContainer().style.cursor = "";
+        });
+        m.on("click", (e) => {
+          L.DomEvent.stopPropagation(e);
+          const id = selIdRef.current; if (!id) return;
+          updBuildings((prev) => prev.map((b) => {
+            if (b.id !== id) return b;
+            const pts = openRing([...b.polygon]);
+            const n = (i + 1) % pts.length;
+            pts.splice(i + 1, 0, midpoint(pts[i], pts[n]));
+            return { ...b, polygon: pts };
+          }));
+          hovMRef.current = null;
+        });
+        midpointMarkersRef.current.push(m);
+      });
+    }
+
+    // draw preview
+    const drawMode = modeRef.current === "draw";
+    const pts = drawPtsRef.current;
+    const all = cursorRef.current && drawMode ? [...pts, cursorRef.current] : pts;
+    previewLineRef.current?.setLatLngs(
+      drawMode && all.length >= 2 ? (all as L.LatLngExpression[]) : []
+    );
+    previewFillRef.current?.setLatLngs(
+      drawMode && pts.length >= 3 ? ([closedRing(pts)] as L.LatLngExpression[][]) : []
+    );
+  }, [mapLoaded, updBuildings, vertexIcon, onDragVertex, pushUndo]);
 
   // ── load data ──────────────────────────────────────────────────────────────
 
@@ -212,228 +289,102 @@ export default function MapEditor() {
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
-    const map = new maplibregl.Map({
-      container: containerRef.current,
-      style: {
-        version: 8,
-        glyphs: "https://fonts.openmaptiles.org/{fontstack}/{range}.pbf",
-        sources: {
-          carto: {
-            type: "raster",
-            tiles: ["https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png", "https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png"],
-            tileSize: 256,
-            attribution: "© OpenStreetMap contributors © CARTO",
-          },
-        },
-        layers: [{ id: "carto-layer", type: "raster", source: "carto" }],
-      } as maplibregl.StyleSpecification,
-      center: [101.4998, 3.0708],
+    const map = L.map(containerRef.current, {
+      center: [3.0708, 101.4998],
       zoom: 16,
+      zoomControl: false,
+      doubleClickZoom: false, // dbl-click is the quick-edit shortcut
     });
-    map.addControl(new maplibregl.NavigationControl(), "bottom-right");
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    }).addTo(map);
+    L.control.zoom({ position: "bottomright" }).addTo(map);
 
-    map.on("load", () => {
-      const fc: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
-      map.addSource("buildings", { type: "geojson", data: fc, promoteId: "id" });
-      map.addSource("edit-ring", { type: "geojson", data: fc });
-      map.addSource("draw-preview", { type: "geojson", data: fc });
-      map.addSource("vertices", { type: "geojson", data: fc, promoteId: "id" });
-      map.addSource("midpoints", { type: "geojson", data: fc, promoteId: "id" });
+    const buildingsLayer = L.geoJSON({ type: "FeatureCollection", features: [] } as GeoJSON.FeatureCollection, {
+      style: (feature) => {
+        if (feature?.properties?.editing) return { color: "#f59e0b", weight: 1.5, fillColor: "#f59e0b", fillOpacity: 0.25 };
+        if (feature?.properties?.selected) return { color: "#4f46e5", weight: 2.5, fillColor: "#6366f1", fillOpacity: 0.38 };
+        return { color: "#6366f1", weight: 1.5, fillColor: "#818cf8", fillOpacity: 0.38 };
+      },
+      onEachFeature: (feature, lyr) => {
+        lyr.on("click", (e) => {
+          L.DomEvent.stopPropagation(e);
+          if (modeRef.current !== "select") return;
+          const id = feature.properties?.id as string;
+          selIdRef.current = id; setSelectedId(id); setExpandedId(id);
+          const b = buildingsRef.current.find((x) => x.id === id);
+          if (b) setFieldEdits({ name: b.name, shortName: b.shortName, floors: b.floors, hours: b.hours, description: b.description });
+        });
+        lyr.on("mouseover", () => {
+          if (modeRef.current === "select") map.getContainer().style.cursor = "pointer";
+        });
+        lyr.on("mouseout", () => {
+          if (modeRef.current === "select") map.getContainer().style.cursor = "";
+        });
+        lyr.on("dblclick", (e) => {
+          L.DomEvent.stopPropagation(e);
+          if (modeRef.current !== "select") return;
+          const id = feature.properties?.id as string;
+          selIdRef.current = id; setSelectedId(id);
+          setMode("edit"); modeRef.current = "edit";
+        });
+      },
+    }).addTo(map);
+    buildingsLayerRef.current = buildingsLayer;
 
-      // buildings
-      map.addLayer({ id: "buildings-fill", type: "fill", source: "buildings", paint: {
-        "fill-color": ["case", ["==", ["get", "editing"], 1], "#f59e0b", ["==", ["get", "selected"], 1], "#6366f1", "#818cf8"],
-        "fill-opacity": ["case", ["==", ["get", "editing"], 1], 0.25, 0.38],
-      }});
-      map.addLayer({ id: "buildings-outline", type: "line", source: "buildings", paint: {
-        "line-color": ["case", ["==", ["get", "editing"], 1], "#f59e0b", ["==", ["get", "selected"], 1], "#4f46e5", "#6366f1"],
-        "line-width": ["case", ["==", ["get", "selected"], 1], 2.5, 1.5],
-      }});
-      map.addLayer({ id: "buildings-label", type: "symbol", source: "buildings", minzoom: 14,
-        layout: { "text-field": ["get", "shortName"], "text-size": 11, "text-anchor": "center" },
-        paint: { "text-color": "#312e81", "text-halo-color": "#fff", "text-halo-width": 2 },
-      });
+    // draw preview layers
+    previewFillRef.current = L.polygon([], {
+      color: "#f59e0b",
+      weight: 1,
+      fillColor: "#f59e0b",
+      fillOpacity: 0.12,
+      interactive: false,
+    }).addTo(map);
 
-      // draw preview
-      map.addLayer({ id: "draw-preview-fill", type: "fill", source: "draw-preview",
-        filter: ["==", ["geometry-type"], "Polygon"],
-        paint: { "fill-color": "#f59e0b", "fill-opacity": 0.12 },
-      });
-      map.addLayer({ id: "draw-preview-line", type: "line", source: "draw-preview",
-        filter: ["==", ["geometry-type"], "LineString"],
-        paint: { "line-color": "#f59e0b", "line-width": 2, "line-dasharray": [5, 3] },
-      });
+    previewLineRef.current = L.polyline([], {
+      color: "#f59e0b",
+      weight: 2,
+      dashArray: "5 3",
+      interactive: false,
+    }).addTo(map);
 
-      // edit ring
-      map.addLayer({ id: "edit-ring-line", type: "line", source: "edit-ring",
-        paint: { "line-color": "#f59e0b", "line-width": 1.5, "line-dasharray": [4, 2] },
-      });
+    // edit ring
+    ringLayerRef.current = L.polyline([], {
+      color: "#f59e0b",
+      weight: 1.5,
+      dashArray: "4 2",
+      interactive: false,
+    }).addTo(map);
 
-      // midpoints
-      map.addLayer({ id: "midpoints-layer", type: "circle", source: "midpoints", paint: {
-        "circle-radius": ["case", ["==", ["get", "hovered"], 1], 6, 4],
-        "circle-color": "#fff",
-        "circle-stroke-width": ["case", ["==", ["get", "hovered"], 1], 2.5, 1.5],
-        "circle-stroke-color": "#f59e0b",
-        "circle-opacity": ["case", ["==", ["get", "hovered"], 1], 1, 0.55],
-      }});
-
-      // vertices
-      map.addLayer({ id: "vertices-layer", type: "circle", source: "vertices", paint: {
-        "circle-radius": ["case", ["==", ["get", "hovered"], 1], 8, 6],
-        "circle-color": ["case", ["==", ["get", "hovered"], 1], "#ef4444", "#f59e0b"],
-        "circle-stroke-width": 2.5,
-        "circle-stroke-color": "#fff",
-      }});
-
-      setMapLoaded(true);
-    });
-
-    mapRef.current = map;
-    return () => { map.remove(); mapRef.current = null; };
-  }, []);
-
-  // ── map interactions ───────────────────────────────────────────────────────
-
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapLoaded) return;
-
-    const onMove = (e: maplibregl.MapMouseEvent) => {
-      const { lng, lat } = e.lngLat;
+    map.on("mousemove", (e: L.LeafletMouseEvent) => {
+      const { lng, lat } = e.latlng;
       setCursorCoords([lng, lat]);
       cursorRef.current = [lng, lat];
-      const m = modeRef.current;
+      if (modeRef.current === "draw") {
+        refreshMap();
+        map.getContainer().style.cursor = "crosshair";
+      }
+    });
 
-      if (m === "draw") { refreshMap(); map.getCanvas().style.cursor = "crosshair"; return; }
-
-      if (m === "edit") {
-        if (draggingRef.current !== null) {
-          const id = selIdRef.current; if (!id) return;
-          const idx = draggingRef.current;
-          setBuildings((prev) => prev.map((b) => {
-            if (b.id !== id) return b;
-            const pts = openRing([...b.polygon]);
-            pts[idx] = [lng, lat];
-            return { ...b, polygon: pts, coords: [centroid(pts)[1], centroid(pts)[0]] };
-          }));
-          return;
-        }
-        const vf = map.queryRenderedFeatures(e.point, { layers: ["vertices-layer"] });
-        if (vf.length) {
-          const idx = vf[0].properties?.idx as number;
-          if (hovVRef.current !== idx) { hovVRef.current = idx; hovMRef.current = null; refreshMap(); }
-          map.getCanvas().style.cursor = "grab"; return;
-        }
-        const mf = map.queryRenderedFeatures(e.point, { layers: ["midpoints-layer"] });
-        if (mf.length) {
-          const ei = mf[0].properties?.edgeIdx as number;
-          if (hovMRef.current !== ei) { hovMRef.current = ei; hovVRef.current = null; refreshMap(); }
-          map.getCanvas().style.cursor = "copy"; return;
-        }
-        if (hovVRef.current !== null || hovMRef.current !== null) { hovVRef.current = null; hovMRef.current = null; refreshMap(); }
-        map.getCanvas().style.cursor = "";
+    map.on("click", (e: L.LeafletMouseEvent) => {
+      const { lng, lat } = e.latlng;
+      if (modeRef.current === "draw") {
+        drawPtsRef.current = [...drawPtsRef.current, [lng, lat]];
+        refreshMap();
         return;
       }
-
-      const bf = map.queryRenderedFeatures(e.point, { layers: ["buildings-fill"] });
-      map.getCanvas().style.cursor = bf.length ? "pointer" : "";
-    };
-
-    const onDown = (e: maplibregl.MapMouseEvent) => {
-      if (modeRef.current !== "edit") return;
-      const vf = map.queryRenderedFeatures(e.point, { layers: ["vertices-layer"] });
-      if (vf.length) {
-        draggingRef.current = vf[0].properties?.idx as number;
-        map.dragPan.disable();
-        map.getCanvas().style.cursor = "grabbing";
-        e.preventDefault();
-      }
-    };
-
-    const onUp = () => {
-      if (draggingRef.current !== null) {
-        // commit the drag to undo stack
-        const bs = buildingsRef.current;
-        undoRef.current[undoRef.current.length - 1] = snap(bs); // overwrite last or push
-        draggingRef.current = null;
-        map.dragPan.enable();
-        map.getCanvas().style.cursor = "grab";
+      if (modeRef.current === "select" && !e.propagatedFrom) {
+        selIdRef.current = null; setSelectedId(null);
         refreshMap();
       }
-    };
+    });
 
-    const onClick = (e: maplibregl.MapMouseEvent) => {
-      const { lng, lat } = e.lngLat;
-      const m = modeRef.current;
-
-      if (m === "draw") {
-        drawPtsRef.current = [...drawPtsRef.current, [lng, lat]]; refreshMap(); return;
-      }
-
-      if (m === "edit") {
-        if (draggingRef.current !== null) return;
-        // click vertex → delete
-        const vf = map.queryRenderedFeatures(e.point, { layers: ["vertices-layer"] });
-        if (vf.length) {
-          const idx = vf[0].properties?.idx as number;
-          const id = selIdRef.current; if (!id) return;
-          updBuildings((prev) => prev.map((b) => {
-            if (b.id !== id) return b;
-            const pts = openRing([...b.polygon]);
-            if (pts.length <= 3) return b;
-            pts.splice(idx, 1);
-            return { ...b, polygon: pts };
-          }));
-          hovVRef.current = null; refreshMap(); return;
-        }
-        // click midpoint → insert
-        const mf = map.queryRenderedFeatures(e.point, { layers: ["midpoints-layer"] });
-        if (mf.length) {
-          const ei = mf[0].properties?.edgeIdx as number;
-          const id = selIdRef.current; if (!id) return;
-          updBuildings((prev) => prev.map((b) => {
-            if (b.id !== id) return b;
-            const pts = openRing([...b.polygon]);
-            const next = (ei + 1) % pts.length;
-            pts.splice(ei + 1, 0, midpoint(pts[ei], pts[next]));
-            return { ...b, polygon: pts };
-          }));
-          hovMRef.current = null; refreshMap(); return;
-        }
-        return;
-      }
-
-      // select mode
-      const bf = map.queryRenderedFeatures(e.point, { layers: ["buildings-fill"] });
-      if (bf.length) {
-        const id = bf[0].properties?.id as string;
-        selIdRef.current = id; setSelectedId(id); setExpandedId(id);
-        const b = buildingsRef.current.find((b) => b.id === id);
-        if (b) setFieldEdits({ name: b.name, shortName: b.shortName, floors: b.floors, hours: b.hours, description: b.description });
-      } else {
-        selIdRef.current = null; setSelectedId(null);
-      }
-      refreshMap();
-    };
-
-    const onDbl = (e: maplibregl.MapMouseEvent) => {
-      if (modeRef.current !== "select") return;
-      const bf = map.queryRenderedFeatures(e.point, { layers: ["buildings-fill"] });
-      if (bf.length) {
-        const id = bf[0].properties?.id as string;
-        selIdRef.current = id; setSelectedId(id);
-        setMode("edit"); modeRef.current = "edit"; refreshMap(); e.preventDefault();
-      }
-    };
-
-    map.on("mousemove", onMove);
-    map.on("mousedown", onDown);
-    map.on("mouseup", onUp);
-    map.on("click", onClick);
-    map.on("dblclick", onDbl);
-    return () => { map.off("mousemove", onMove); map.off("mousedown", onDown); map.off("mouseup", onUp); map.off("click", onClick); map.off("dblclick", onDbl); };
-  }, [mapLoaded, updBuildings, refreshMap]);
+    setMapLoaded(true);
+    mapRef.current = map;
+    return () => { map.remove(); mapRef.current = null; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── keyboard ───────────────────────────────────────────────────────────────
 
@@ -441,12 +392,11 @@ export default function MapEditor() {
     const onKey = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement).tagName === "INPUT") return;
       if (e.key === "Escape") {
-        // close guide first if open
         setShowGuide((v) => { if (v) return false; return v; });
         if (modeRef.current === "draw") commitDraw(); else exitEdit();
       }
       if (e.key === "Enter" && modeRef.current === "draw") commitDraw();
-      if ((e.key === "z" || e.key === "Z") && (e.ctrlKey || e.metaKey)) { e.preventDefault(); e.shiftKey ? redo() : undo(); }
+      if ((e.key === "z" || e.key === "Z") && (e.ctrlKey || e.metaKey)) { e.preventDefault(); if (e.shiftKey) { redo(); } else { undo(); } }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -465,8 +415,7 @@ export default function MapEditor() {
   const exitEdit = useCallback(() => {
     setMode("select"); modeRef.current = "select";
     hovVRef.current = null; hovMRef.current = null; draggingRef.current = null;
-    mapRef.current?.dragPan.enable();
-    if (mapRef.current) mapRef.current.getCanvas().style.cursor = "";
+    if (mapRef.current) mapRef.current.getContainer().style.cursor = "";
     refreshMap();
   }, [refreshMap]);
 
@@ -534,7 +483,7 @@ export default function MapEditor() {
     const map = mapRef.current; if (!map) return;
     const pts = openRing(b.polygon);
     const c = pts.length >= 2 ? centroid(pts) : [b.coords[1], b.coords[0]] as [number, number];
-    map.flyTo({ center: c, zoom: 18, duration: 500 });
+    map.flyTo([c[1], c[0]], 18, { duration: 0.5 });
   };
 
   const downloadJSON = () => {
@@ -570,7 +519,7 @@ export default function MapEditor() {
             <button className="editor-help-btn" onClick={() => setShowGuide(true)}>
               <HelpCircle size={12} /> Guide
             </button>
-            <a href="/" className="editor-exit-link">← Exit</a>
+            <Link href="/" className="editor-exit-link">← Exit</Link>
           </div>
         </div>
 
@@ -790,14 +739,14 @@ export default function MapEditor() {
                     <div className="editor-guide-step-num">2</div>
                     <div className="editor-guide-step-body">
                       <strong>Edit its vertices <span className="editor-guide-tag indigo">Edit mode</span></strong>
-                      <p>Click <em>"Edit vertices →"</em> in the bottom pill, or <strong>double-click</strong> the building. Yellow dots appear on each vertex — drag them to reshape. Small ring dots on each edge midpoint can be clicked to insert a new vertex. Click a <span style={{ color: "#ef4444" }}>red (hovered) vertex</span> to delete it.</p>
+                      <p>Click <em>&quot;Edit vertices →&quot;</em> in the bottom pill, or <strong>double-click</strong> the building. Yellow dots appear on each vertex — drag them to reshape. Small ring dots on each edge midpoint can be clicked to insert a new vertex. Click a <span style={{ color: "#ef4444" }}>red (hovered) vertex</span> to delete it.</p>
                     </div>
                   </div>
                   <div className="editor-guide-step">
                     <div className="editor-guide-step-num">3</div>
                     <div className="editor-guide-step-body">
                       <strong>Redraw from scratch <span className="editor-guide-tag amber">Draw mode</span></strong>
-                      <p>Click <em>"Redraw →"</em> or the pencil icon. Click on the map to place vertices one by one — a live preview shows the polygon forming. Press <span className="editor-guide-kbd">Enter</span> or <span className="editor-guide-kbd">Esc</span> when done. It automatically switches to Edit mode so you can refine.</p>
+                      <p>Click <em>&quot;Redraw →&quot;</em> or the pencil icon. Click on the map to place vertices one by one — a live preview shows the polygon forming. Press <span className="editor-guide-kbd">Enter</span> or <span className="editor-guide-kbd">Esc</span> when done. It automatically switches to Edit mode so you can refine.</p>
                     </div>
                   </div>
                   <div className="editor-guide-step">

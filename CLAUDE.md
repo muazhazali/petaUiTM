@@ -30,7 +30,7 @@ There are no tests currently.
 ### Key Components
 
 - **`src/app/[campus]/CampusMap.tsx`** — Client component orchestrating the full campus view. Manages `selectedBuilding` state, syncs it with `?building=` URL param, and composes `MapComponent`, `SearchBar`, and `BuildingSheet`.
-- **`src/components/MapComponent.tsx`** — MapLibre GL JS wrapper (always `dynamic` imported with `ssr: false`). Renders building GeoJSON polygons with hover/selected feature states, handles clicks, and supports a `routeGeoJSON` prop for rendering OSRM walking routes.
+- **`src/components/MapComponent.tsx`** — Leaflet wrapper (always `dynamic` imported with `ssr: false`). Renders building GeoJSON polygons with hover/selected styles via `L.geoJSON`, pill markers via `L.divIcon`, handles clicks, and supports a `routeGeoJSON` prop for rendering OSRM walking routes. Tiles come from OpenStreetMap — free, no API key.
 - **`src/components/SearchBar.tsx`** — Fuse.js fuzzy search over buildings.
 - **`src/components/BuildingSheet.tsx`** — Slide-up sheet showing building details when a building is selected.
 
@@ -48,12 +48,12 @@ Note the inconsistency in `src/types/index.ts`:
 - `Building.coords` is `[lat, lng]`
 - `Building.polygon` entries and `Campus.center` are `[lng, lat]` (GeoJSON standard)
 
-When using `flyTo` in MapLibre, always use `[lng, lat]` — see `MapComponent.tsx:197` where `coords` is flipped: `[selectedBuilding.coords[1], selectedBuilding.coords[0]]`.
+Leaflet APIs (`L.map`, `L.marker`, `flyTo`) take `[lat, lng]` — so `Campus.center` must be flipped (`[center[1], center[0]]`) while `Building.coords` is used as-is.
 
 ### Styling
 
 Tailwind CSS v4 + shadcn/ui components in `src/components/ui/`. A `glass` utility class (glass-morphism) is used throughout the map overlay UI.
 
-### MapLibre note
+### Leaflet note
 
-`MapComponent` is always dynamically imported with `ssr: false` because MapLibre GL JS requires browser APIs. The map instance is stored in a `useRef` and initialized once — mutations (route updates, pan-to-building) use separate `useEffect`s that operate on `mapRef.current`.
+`MapComponent` is always dynamically imported with `ssr: false` because Leaflet requires browser APIs. The map instance is stored in a `useRef` and initialized once — mutations (route updates, pan-to-building, marker restyling) use separate `useEffect`s that operate on `mapRef.current`. Leaflet CSS is imported in `globals.css`; custom markers use `L.divIcon` with wrapper classes reset in `globals.css` (`.marker-*`). Tiles come from OpenStreetMap — free, no API key.

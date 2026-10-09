@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useCallback } from "react";
-import maplibregl from "maplibre-gl";
+import L from "leaflet";
 import { Building, POI, POICategory } from "@/types";
 
 const POI_COLORS: Record<POICategory, string> = {
@@ -24,6 +24,9 @@ const POI_ICONS: Record<POICategory, string> = {
   library: "📚",
 };
 
+const OSM_TILES = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+const OSM_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
 interface MapComponentProps {
   campus: { id: string; center: [number, number]; zoom: number; bounds: [[number, number], [number, number]] };
   buildings: Building[];
@@ -36,6 +39,9 @@ interface MapComponentProps {
   activeCategories?: Set<POICategory>;
 }
 
+const SELECTED_STYLE = { color: "#4f46e5", weight: 2.5, fillColor: "#6366f1", fillOpacity: 0.7 };
+const DEFAULT_STYLE = { color: "#6366f1", weight: 2, fillColor: "#818cf8", fillOpacity: 0.45 };
+
 export default function MapComponent({
   campus,
   buildings,
@@ -47,12 +53,16 @@ export default function MapComponent({
   pois = [],
   activeCategories,
 }: MapComponentProps) {
-  const mapRef = useRef<maplibregl.Map | null>(null);
+  const mapRef = useRef<L.Map | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const fromMarkerRef = useRef<maplibregl.Marker | null>(null);
-  const toMarkerRef = useRef<maplibregl.Marker | null>(null);
-  const poiMarkersRef = useRef<maplibregl.Marker[]>([]);
-  const buildingMarkersRef = useRef<maplibregl.Marker[]>([]);
+  const buildingsLayerRef = useRef<L.GeoJSON | null>(null);
+  const routeLayerRef = useRef<L.GeoJSON | null>(null);
+  const fromMarkerRef = useRef<L.Marker | null>(null);
+  const toMarkerRef = useRef<L.Marker | null>(null);
+  const locateMarkerRef = useRef<L.CircleMarker | null>(null);
+  const poiMarkersRef = useRef<L.Marker[]>([]);
+  const buildingMarkersRef = useRef<L.Marker[]>([]);
+  const selectedIdRef = useRef<string | null>(null);
 
   const handleBuildingClick = useCallback(
     (buildingId: string) => {
@@ -63,246 +73,192 @@ export default function MapComponent({
   );
 
   useEffect(() => {
+    selectedIdRef.current = selectedBuilding?.id ?? null;
+  }, [selectedBuilding]);
+
+  // ── init map ──────────────────────────────────────────────────────────────
+  useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
-    const map = new maplibregl.Map({
-      container: containerRef.current,
-      style: {
-        version: 8,
-        glyphs: "https://fonts.openmaptiles.org/{fontstack}/{range}.pbf",
-        sources: {
-          "carto-light": {
-            type: "raster",
-            tiles: [
-              "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png",
-              "https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png",
-              "https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png",
-            ],
-            tileSize: 256,
-            attribution: "&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors &copy; <a href='https://carto.com/attributions'>CARTO</a>",
-          },
-        },
-        layers: [
-          { id: "carto-light-layer", type: "raster", source: "carto-light" },
-        ],
-      } as maplibregl.StyleSpecification,
-      center: campus.center,
+    const map = L.map(containerRef.current, {
+      center: [campus.center[1], campus.center[0]], // [lng,lat] → [lat,lng]
       zoom: campus.zoom,
+      zoomControl: false,
     });
 
-    map.addControl(new maplibregl.NavigationControl(), "bottom-right");
-    map.addControl(
-      new maplibregl.GeolocateControl({
-        positionOptions: { enableHighAccuracy: true },
-        trackUserLocation: true,
-      }),
-      "bottom-right"
-    );
+    L.tileLayer(OSM_TILES, { maxZoom: 19, attribution: OSM_ATTR }).addTo(map);
 
-    map.on("load", () => {
-      const features = buildings.map((b) => ({
-        type: "Feature" as const,
-        id: b.id,
-        properties: { id: b.id, name: b.name, shortName: b.shortName },
-        geometry: {
-          type: "Polygon" as const,
-          coordinates: [b.polygon],
-        },
-      }));
+    L.control.zoom({ position: "bottomright" }).addTo(map);
 
-      map.addSource("buildings", {
-        type: "geojson",
-        data: { type: "FeatureCollection", features },
-        promoteId: "id",
-      });
-
-      map.addLayer({
-        id: "buildings-fill",
-        type: "fill",
-        source: "buildings",
-        paint: {
-          "fill-color": [
-            "case",
-            ["boolean", ["feature-state", "selected"], false],
-            "#6366f1",
-            "#818cf8",
-          ],
-          "fill-opacity": [
-            "case",
-            ["boolean", ["feature-state", "hover"], false],
-            0.7,
-            0.45,
-          ],
-        },
-      });
-
-      map.addLayer({
-        id: "buildings-outline",
-        type: "line",
-        source: "buildings",
-        paint: {
-          "line-color": [
-            "case",
-            ["boolean", ["feature-state", "selected"], false],
-            "#4f46e5",
-            "#6366f1",
-          ],
-          "line-width": 2,
-        },
-      });
-
-      map.addLayer({
-        id: "buildings-label",
-        type: "symbol",
-        source: "buildings",
-        layout: {
-          "text-field": ["get", "shortName"],
-          "text-size": 12,
-          "text-anchor": "center",
-        },
-        paint: {
-          "text-color": "#4338ca",
-          "text-halo-color": "#ffffff",
-          "text-halo-width": 2,
-        },
-        minzoom: 99,
-      });
-
-      // Route source (empty initially)
-      map.addSource("route", {
-        type: "geojson",
-        data: { type: "FeatureCollection", features: [] },
-      });
-
-      map.addLayer({
-        id: "route-line",
-        type: "line",
-        source: "route",
-        layout: { "line-join": "round", "line-cap": "round" },
-        paint: { "line-color": "#6366f1", "line-width": 5, "line-opacity": 0.9 },
-      });
-
-      // Building pill markers
-      buildings.forEach((b) => {
-        const outer = document.createElement("div");
-        outer.dataset.buildingId = b.id;
-        outer.style.cursor = "pointer";
-
-        const pill = document.createElement("div");
-        pill.className = "marker-pill";
-        pill.textContent = b.shortName;
-        pill.style.cssText = [
-          "padding: 3px 8px",
-          "border-radius: 999px",
-          "font-size: 10px",
-          "font-weight: 700",
-          "color: white",
-          "background: oklch(0.32 0.09 155)",
-          "border: 1.5px solid white",
-          "box-shadow: 0 2px 6px rgba(0,0,0,0.25)",
-          "white-space: nowrap",
-          "user-select: none",
-          "transition: background 0.15s",
-        ].join(";");
-
-        outer.appendChild(pill);
-        outer.addEventListener("click", (e) => {
-          e.stopPropagation();
-          const building = buildings.find((bld) => bld.id === b.id);
-          if (building) onBuildingSelect(building);
+    const LocateControl = L.Control.extend({
+      onAdd() {
+        const el = L.DomUtil.create("div", "leaflet-bar leaflet-control map-locate-btn");
+        el.innerHTML =
+          '<a href="#" role="button" title="Show my location" aria-label="Show my location" style="display:flex;align-items:center;justify-content:center;width:30px;height:30px">' +
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>' +
+          "</a>";
+        L.DomEvent.on(el, "click", (e: Event) => {
+          L.DomEvent.preventDefault(e);
+          L.DomEvent.stopPropagation(e);
+          map.locate({ setView: true, enableHighAccuracy: true, maxZoom: 17 });
         });
+        return el;
+      },
+    });
+    new (LocateControl as unknown as new (opts?: L.ControlOptions) => L.Control)({
+      position: "bottomright",
+    }).addTo(map);
 
-        const marker = new maplibregl.Marker({ element: outer, anchor: "bottom" })
-          .setLngLat([b.coords[1], b.coords[0]])
-          .addTo(map);
+    map.on("locationfound", (e: L.LocationEvent) => {
+      locateMarkerRef.current?.remove();
+      locateMarkerRef.current = L.circleMarker(e.latlng, {
+        radius: 8,
+        color: "#ffffff",
+        weight: 3,
+        fillColor: "#2f7d53",
+        fillOpacity: 1,
+      })
+        .addTo(map)
+        .bindPopup("You are here")
+        .openPopup();
+    });
 
-        buildingMarkersRef.current.push(marker);
+    // Building polygons
+    const features = buildings.map((b) => ({
+      type: "Feature" as const,
+      properties: { id: b.id, name: b.name, shortName: b.shortName },
+      geometry: {
+        type: "Polygon" as const,
+        coordinates: [b.polygon],
+      },
+    }));
+
+    type BLayer = L.Path & { feature?: GeoJSON.Feature };
+    const styleFor = (id: string | undefined, hovered: boolean) => {
+      const base = id === selectedIdRef.current ? SELECTED_STYLE : DEFAULT_STYLE;
+      return hovered
+        ? { ...base, fillColor: id === selectedIdRef.current ? SELECTED_STYLE.fillColor : "#818cf8", fillOpacity: 0.7 }
+        : base;
+    };
+
+    const buildingsLayer = L.geoJSON(
+      { type: "FeatureCollection", features } as GeoJSON.FeatureCollection,
+      {
+        style: DEFAULT_STYLE,
+        onEachFeature: (feature, layer) => {
+          const path = layer as BLayer;
+          path.setStyle(styleFor(feature.properties?.id, false));
+          path.on("mouseover", () => {
+            path.setStyle(styleFor(feature.properties?.id, true));
+            path.bringToFront();
+            map.getContainer().style.cursor = "pointer";
+          });
+          path.on("mouseout", () => {
+            path.setStyle(styleFor(feature.properties?.id, false));
+            map.getContainer().style.cursor = "";
+          });
+          path.on("click", () => {
+            handleBuildingClick(feature.properties?.id as string);
+          });
+        },
+      }
+    ).addTo(map);
+    buildingsLayerRef.current = buildingsLayer;
+
+    // Route layer (non-interactive so clicks pass through)
+    const routeLayer = L.geoJSON(
+      { type: "FeatureCollection", features: [] } as GeoJSON.FeatureCollection,
+      {
+        style: { color: "#6366f1", weight: 5, opacity: 0.9 },
+        interactive: false,
+      }
+    ).addTo(map);
+    routeLayerRef.current = routeLayer;
+
+    // Building pill markers
+    buildings.forEach((b) => {
+      const pillHtml = `<div class="marker-pill" data-building-id="${b.id}" style="padding:3px 8px;border-radius:999px;font-size:10px;font-weight:700;color:white;background:oklch(0.32 0.09 155);border:1.5px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.25);white-space:nowrap;user-select:none;cursor:pointer;transition:background 0.15s">${b.shortName}</div>`;
+
+      const marker = L.marker([b.coords[0], b.coords[1]], {
+        icon: L.divIcon({ className: "marker-pill-wrapper", html: pillHtml }),
+        keyboard: false,
+      }).addTo(map);
+
+      marker.on("click", () => {
+        handleBuildingClick(b.id);
       });
 
-      // Hover state
-      let hoveredId: string | null = null;
-      map.on("mousemove", "buildings-fill", (e) => {
-        if (e.features && e.features.length > 0) {
-          if (hoveredId) {
-            map.setFeatureState({ source: "buildings", id: hoveredId }, { hover: false });
-          }
-          hoveredId = e.features[0].properties?.id ?? null;
-          if (hoveredId) {
-            map.setFeatureState({ source: "buildings", id: hoveredId }, { hover: true });
-          }
-          map.getCanvas().style.cursor = "pointer";
-        }
-      });
+      buildingMarkersRef.current.push(marker);
+    });
 
-      map.on("mouseleave", "buildings-fill", () => {
-        if (hoveredId) {
-          map.setFeatureState({ source: "buildings", id: hoveredId }, { hover: false });
-        }
-        hoveredId = null;
-        map.getCanvas().style.cursor = "";
-      });
-
-      map.on("click", "buildings-fill", (e) => {
-        if (e.features && e.features.length > 0) {
-          const id = e.features[0].properties?.id;
-          if (id) handleBuildingClick(id);
-        }
-      });
-
-      map.on("click", (e) => {
-        const features = map.queryRenderedFeatures(e.point, {
-          layers: ["buildings-fill"],
-        });
-        if (features.length === 0) onBuildingSelect(null);
-      });
+    // Deselect on background click (skip clicks that bubbled from buildings/pills)
+    map.on("click", (e: L.LeafletMouseEvent) => {
+      if (e.propagatedFrom) return;
+      onBuildingSelect(null);
     });
 
     mapRef.current = map;
     return () => {
       map.remove();
       mapRef.current = null;
+      buildingsLayerRef.current = null;
+      routeLayerRef.current = null;
+      fromMarkerRef.current = null;
+      toMarkerRef.current = null;
+      locateMarkerRef.current = null;
+      poiMarkersRef.current = [];
+      buildingMarkersRef.current = [];
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const applySelectedStyle = useCallback(() => {
+    const layer = buildingsLayerRef.current;
+    if (!layer) return;
+    layer.eachLayer((sub) => {
+      const path = sub as L.Path & { feature?: GeoJSON.Feature };
+      const id = path.feature?.properties?.id;
+      path.setStyle(id === selectedIdRef.current ? SELECTED_STYLE : DEFAULT_STYLE);
+    });
+  }, []);
+
+  // Update selected building styles
+  useEffect(() => {
+    applySelectedStyle();
+  }, [selectedBuilding, applySelectedStyle]);
+
   // Update route when routeGeoJSON changes
   useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !map.isStyleLoaded()) return;
-    const source = map.getSource("route") as maplibregl.GeoJSONSource | undefined;
-    if (source && routeGeoJSON) {
-      source.setData(routeGeoJSON);
-    } else if (source) {
-      source.setData({ type: "FeatureCollection", features: [] });
-    }
+    const layer = routeLayerRef.current;
+    if (!layer) return;
+    layer.clearLayers();
+    if (routeGeoJSON) layer.addData(routeGeoJSON);
   }, [routeGeoJSON]);
 
   // Pan to selected building
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !selectedBuilding) return;
-    map.flyTo({
-      center: [selectedBuilding.coords[1], selectedBuilding.coords[0]],
-      zoom: Math.max(map.getZoom(), 17),
-      duration: 800,
-    });
+    map.flyTo(
+      [selectedBuilding.coords[0], selectedBuilding.coords[1]],
+      Math.max(map.getZoom(), 17),
+      { duration: 0.8 }
+    );
   }, [selectedBuilding]);
 
-  // Update building marker selected state
+  // Update building pill selected state
   useEffect(() => {
     buildingMarkersRef.current.forEach((marker) => {
-      const outer = marker.getElement();
-      const pill = outer.querySelector(".marker-pill") as HTMLElement | null;
+      const pill = marker.getElement()?.querySelector<HTMLElement>(".marker-pill");
       if (!pill) return;
-      const id = outer.dataset.buildingId;
-      if (id === selectedBuilding?.id) {
+      if (pill.dataset.buildingId === selectedBuilding?.id) {
         pill.style.background = "#6366f1";
         pill.style.boxShadow = "0 2px 10px rgba(99,102,241,0.5)";
-        outer.style.zIndex = "10";
+        (pill.parentElement ?? pill).style.zIndex = "1000";
       } else {
         pill.style.background = "oklch(0.32 0.09 155)";
         pill.style.boxShadow = "0 2px 6px rgba(0,0,0,0.25)";
-        outer.style.zIndex = "1";
+        (pill.parentElement ?? pill).style.zIndex = "1";
       }
     });
   }, [selectedBuilding]);
@@ -314,12 +270,24 @@ export default function MapComponent({
     fromMarkerRef.current?.remove();
     fromMarkerRef.current = null;
     if (fromBuilding) {
-      const el = document.createElement("div");
-      el.className = "w-5 h-5 rounded-full bg-emerald-500 border-[3px] border-white shadow-lg shadow-emerald-500/40";
-      fromMarkerRef.current = new maplibregl.Marker({ element: el })
-        .setLngLat([fromBuilding.coords[1], fromBuilding.coords[0]])
-        .addTo(map);
-      map.flyTo({ center: [fromBuilding.coords[1], fromBuilding.coords[0]], zoom: Math.max(map.getZoom(), 16), duration: 600 });
+      fromMarkerRef.current = L.marker(
+        [fromBuilding.coords[0], fromBuilding.coords[1]],
+        {
+          icon: L.divIcon({
+            className: "marker-dot-wrapper",
+            html: '<div class="w-5 h-5 rounded-full bg-emerald-500 border-[3px] border-white shadow-lg shadow-emerald-500/40"></div>',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10],
+          }),
+          interactive: false,
+          keyboard: false,
+        }
+      ).addTo(map);
+      map.flyTo(
+        [fromBuilding.coords[0], fromBuilding.coords[1]],
+        Math.max(map.getZoom(), 16),
+        { duration: 0.6 }
+      );
     }
   }, [fromBuilding]);
 
@@ -330,12 +298,24 @@ export default function MapComponent({
     toMarkerRef.current?.remove();
     toMarkerRef.current = null;
     if (toBuilding) {
-      const el = document.createElement("div");
-      el.className = "w-5 h-5 rounded-full bg-rose-500 border-[3px] border-white shadow-lg shadow-rose-500/40";
-      toMarkerRef.current = new maplibregl.Marker({ element: el })
-        .setLngLat([toBuilding.coords[1], toBuilding.coords[0]])
-        .addTo(map);
-      map.flyTo({ center: [toBuilding.coords[1], toBuilding.coords[0]], zoom: Math.max(map.getZoom(), 16), duration: 600 });
+      toMarkerRef.current = L.marker(
+        [toBuilding.coords[0], toBuilding.coords[1]],
+        {
+          icon: L.divIcon({
+            className: "marker-dot-wrapper",
+            html: '<div class="w-5 h-5 rounded-full bg-rose-500 border-[3px] border-white shadow-lg shadow-rose-500/40"></div>',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10],
+          }),
+          interactive: false,
+          keyboard: false,
+        }
+      ).addTo(map);
+      map.flyTo(
+        [toBuilding.coords[0], toBuilding.coords[1]],
+        Math.max(map.getZoom(), 16),
+        { duration: 0.6 }
+      );
     }
   }, [toBuilding]);
 
@@ -344,7 +324,6 @@ export default function MapComponent({
     const map = mapRef.current;
     if (!map) return;
 
-    // Remove existing POI markers
     poiMarkersRef.current.forEach((m) => m.remove());
     poiMarkersRef.current = [];
 
@@ -353,28 +332,28 @@ export default function MapComponent({
       : [];
 
     visiblePois.forEach((poi) => {
-      const el = document.createElement("div");
-      el.className = "flex items-center justify-center w-8 h-8 rounded-full border-2 border-white shadow-lg text-base cursor-pointer select-none";
-      el.style.backgroundColor = POI_COLORS[poi.category] ?? "#6366f1";
-      el.textContent = POI_ICONS[poi.category] ?? "📍";
-      el.title = poi.name;
+      const marker = L.marker([poi.coords[0], poi.coords[1]], {
+        icon: L.divIcon({
+          className: "marker-poi-wrapper",
+          html: `<div title="${poi.name}" style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:999px;border:2px solid white;box-shadow:0 4px 10px rgba(0,0,0,0.2);font-size:16px;cursor:pointer;user-select:none;background:${POI_COLORS[poi.category] ?? "#6366f1"}">${POI_ICONS[poi.category] ?? "📍"}</div>`,
+          iconSize: [32, 32],
+          iconAnchor: [16, 16],
+        }),
+        keyboard: false,
+      }).addTo(map);
 
-      const popup = new maplibregl.Popup({ offset: 16, closeButton: false, maxWidth: "200px" }).setHTML(
-        `<div style="font-family:sans-serif;padding:4px 2px">
-          <div style="font-weight:600;font-size:13px;color:#111">${poi.name}</div>
-          ${poi.description ? `<div style="font-size:11px;color:#666;margin-top:2px">${poi.description}</div>` : ""}
-        </div>`
+      marker.bindPopup(
+        L.popup({
+          offset: [0, -18],
+          closeButton: false,
+          maxWidth: 200,
+        }).setContent(
+          `<div style="font-family:sans-serif;padding:4px 2px">
+            <div style="font-weight:600;font-size:13px;color:#111">${poi.name}</div>
+            ${poi.description ? `<div style="font-size:11px;color:#666;margin-top:2px">${poi.description}</div>` : ""}
+          </div>`
+        )
       );
-
-      const marker = new maplibregl.Marker({ element: el })
-        .setLngLat([poi.coords[1], poi.coords[0]])
-        .setPopup(popup)
-        .addTo(map);
-
-      el.addEventListener("click", (e) => {
-        e.stopPropagation();
-        marker.togglePopup();
-      });
 
       poiMarkersRef.current.push(marker);
     });
