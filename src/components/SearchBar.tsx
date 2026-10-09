@@ -118,7 +118,7 @@ export default function SearchBar({ buildings, onSelectBuilding }: SearchBarProp
             boxShadow: "0 2px 12px rgba(23,36,91,0.08), 0 1px 3px rgba(0,0,0,0.05)",
           }}
           onFocusCapture={(e) => {
-            e.currentTarget.style.boxShadow = "0 0 0 2px rgba(245,191,50,0.8), 0 2px 12px rgba(23,36,91,0.08)";
+            e.currentTarget.style.boxShadow = "0 2px 12px rgba(23,36,91,0.08)";
           }}
           onBlurCapture={(e) => {
             e.currentTarget.style.boxShadow = "0 2px 12px rgba(23,36,91,0.08), 0 1px 3px rgba(0,0,0,0.05)";

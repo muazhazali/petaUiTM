@@ -231,7 +231,6 @@ export default async function Home() {
                   height: 40,
                   borderRadius: 10,
                   background: "#17245B",
-                  borderTop: "2px solid #F5BF32",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",

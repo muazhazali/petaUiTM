@@ -51,7 +51,6 @@ export default function POIFilter({ activeCategories, onChange }: POIFilterProps
                     background: GREEN,
                     color: "white",
                     border: `1px solid ${GREEN}`,
-                    boxShadow: "0 2px 8px rgba(91,38,123,0.25)",
                   }
                 : {
                     background: "rgba(255,255,255,0.92)",

@@ -290,7 +290,7 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
               <button
                 onClick={() => setShowMap(true)}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold text-white shadow-lg active:scale-95 transition-all"
-                style={{ background: "#17245B", boxShadow: "0 4px 16px rgba(91,38,123,0.4)" }}
+                style={{ background: "#17245B" }}
               >
                 <Map className="h-4 w-4" />
                 Show Map

@@ -274,7 +274,7 @@ export default function MapComponent({
       if (!pill) return;
       if (pill.dataset.buildingId === selectedBuilding?.id) {
         pill.style.background = "#5B267B";
-        pill.style.boxShadow = "0 2px 10px rgba(91,38,123,0.5)";
+        pill.style.boxShadow = "0 2px 6px rgba(0,0,0,0.25)";
         (pill.parentElement ?? pill).style.zIndex = "1000";
       } else {
         pill.style.background = "#17245B";

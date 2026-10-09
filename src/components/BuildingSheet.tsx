@@ -89,7 +89,7 @@ export default function BuildingSheet({ building, onClose, onSetFrom, onSetTo }:
                 {/* Building icon with initials */}
                 <div
                   className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm"
-                  style={{ background: "#17245B", borderTop: "2px solid #F5BF32" }}
+                  style={{ background: "#17245B" }}
                 >
                   <Building2 className="h-5 w-5 text-[#F5BF32]" />
                 </div>
@@ -127,7 +127,6 @@ export default function BuildingSheet({ building, onClose, onSetFrom, onSetTo }:
                     style={{
                       background: "#F5BF32",
                       color: "#17245B",
-                      boxShadow: "0 2px 8px rgba(245,191,50,0.4)",
                     }}
                   >
                     <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
@@ -142,7 +141,6 @@ export default function BuildingSheet({ building, onClose, onSetFrom, onSetTo }:
                     style={{
                       background: "#5B267B",
                       color: "white",
-                      boxShadow: "0 2px 8px rgba(91,38,123,0.3)",
                     }}
                   >
                     <Navigation className="h-3.5 w-3.5" aria-hidden="true" />
