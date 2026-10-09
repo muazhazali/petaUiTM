@@ -23,7 +23,7 @@ An open-source interactive campus map for Universiti Teknologi MARA (UiTM). Buil
 
 | Concern         | Choice                        |
 |-----------------|-------------------------------|
-| Framework       | Next.js 15 (App Router, SSG)  |
+| Framework       | Next.js 16 (App Router, SSG)  |
 | Map renderer    | Leaflet                       |
 | Tile source     | OpenStreetMap (free, no key)  |
 | Search          | Fuse.js (client-side)         |
@@ -59,6 +59,46 @@ Open http://localhost:3000.
 pnpm build
 pnpm start
 ```
+
+---
+
+## Architecture
+
+PetaUiTM is a static Next.js App Router app with no backend — all data is static JSON loaded client-side.
+
+### Routes
+
+| Route | Description |
+|-------|-------------|
+| `/` | Campus selector landing page |
+| `/[campus]` | Full-screen map view for a campus |
+| `/[campus]?building={id}` | Map with building info sheet open |
+| `/[campus]?building={id}&floor={n}` | Floor plan view |
+| `/[campus]?from={id}&to={id}` | Navigation route view |
+
+### Key Components
+
+- **`src/app/[campus]/CampusMap.tsx`** — Client component orchestrating the full campus view. Manages `selectedBuilding` state, syncs it with the `?building=` URL param, and composes `MapComponent`, `SearchBar`, and `BuildingSheet`.
+- **`src/components/MapComponent.tsx`** — Leaflet wrapper (always dynamically imported with `ssr: false`). Renders building GeoJSON polygons with hover/selected styles via `L.geoJSON`, pill markers via `L.divIcon`, handles clicks, and supports a `routeGeoJSON` prop for rendering OSRM walking routes.
+- **`src/components/SearchBar.tsx`** — Fuse.js fuzzy search over buildings.
+- **`src/components/BuildingSheet.tsx`** — Slide-up sheet showing building details when a building is selected.
+
+### Coordinate convention
+
+Note the inconsistency in `src/types/index.ts`:
+
+- `Building.coords` is `[lat, lng]`
+- `Building.polygon` entries and `Campus.center` are `[lng, lat]` (GeoJSON standard)
+
+Leaflet APIs (`L.map`, `L.marker`, `flyTo`) take `[lat, lng]` — so `Campus.center` must be flipped (`[center[1], center[0]]`) while `Building.coords` is used as-is.
+
+### Styling & Leaflet notes
+
+- Tailwind CSS v4 + shadcn/ui components in `src/components/ui/`. A `glass` utility class (glass-morphism) is used throughout the map overlay UI.
+- `MapComponent` is dynamically imported with `ssr: false` because Leaflet requires browser APIs. The map instance is stored in a `useRef` and initialized once — mutations (route updates, pan-to-building, marker restyling) use separate `useEffect`s that operate on `mapRef.current`.
+- Leaflet CSS is imported in `globals.css`; custom markers use `L.divIcon` with wrapper classes reset in `globals.css` (`.marker-*`).
+
+Lint with `pnpm lint`. There is no test suite.
 
 ---
 
