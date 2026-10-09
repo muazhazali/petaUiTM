@@ -89,8 +89,8 @@ export default function MapEditor() {
   const drawPtsRef = useRef<[number, number][]>([]);
   const cursorRef = useRef<[number, number] | null>(null);
   const draggingRef = useRef<number | null>(null); // vertex index
-  const hovVRef = useRef<number | null>(null);
-  const hovMRef = useRef<number | null>(null);
+  const refreshPendingRef = useRef(false);
+  const refreshMapRef = useRef<() => void>(() => {});
 
   useEffect(() => { modeRef.current = mode; }, [mode]);
   useEffect(() => { selIdRef.current = selectedId; }, [selectedId]);
@@ -142,18 +142,82 @@ export default function MapEditor() {
   }, []);
 
   // ── refresh map ────────────────────────────────────────────────────────────
+  //
+  // Two paths:
+  //  - refreshMap(): full rebuild of overlays (mode/selection change, vertex
+  //    add/remove). Never called while a vertex drag is in progress — if one
+  //    is, it defers to after dragend.
+  //  - syncDuringDrag(): lightweight — updates ring line, midpoint dot
+  //    positions, building polygon fill, and draw preview via setLatLngs
+  //    only. Called on every building change; safe mid-drag because it
+  //    never touches the dragged marker's DOM.
 
-  const vertexIcon = useCallback((hovered: boolean) =>
+  const vertexIcon = useCallback((drag: boolean) =>
     L.divIcon({
       className: "editor-vertex-wrap",
-      html: `<div class="editor-vertex${hovered ? " hovered" : ""}"></div>`,
+      html: `<div class="editor-vertex${drag ? " dragging" : ""}"></div>`,
       iconSize: [14, 14],
       iconAnchor: [7, 7],
     }), []);
 
+  const currentRing = useCallback((): [number, number][] => {
+    const editId = modeRef.current !== "select" ? selIdRef.current : null;
+    const editB = editId ? buildingsRef.current.find((b) => b.id === editId) : null;
+    return modeRef.current === "draw" ? drawPtsRef.current : editB ? openRing(editB.polygon) : [];
+  }, []);
+
+  const syncDuringDrag = useCallback(() => {
+    const map = mapRef.current;
+    if (!map || !mapLoaded) return;
+
+    const editId = modeRef.current !== "select" ? selIdRef.current : null;
+
+    // building polygons (fill follows the dragged vertex live)
+    const layer = buildingsLayerRef.current;
+    if (layer) {
+      layer.clearLayers();
+      layer.addData({
+        type: "FeatureCollection",
+        features: buildingsRef.current.filter((b) => b.polygon.length >= 3).map((b) => ({
+          type: "Feature",
+          properties: { id: b.id, name: b.name, shortName: b.shortName, selected: +(b.id === selIdRef.current), editing: +(b.id === editId) },
+          geometry: { type: "Polygon", coordinates: [closedRing(b.polygon)] },
+        })),
+      } as GeoJSON.FeatureCollection);
+    }
+
+    // ring line follows
+    const ring = currentRing();
+    ringLayerRef.current?.setLatLngs(ring.length >= 2 ? (closedRing(ring) as L.LatLngExpression[]) : []);
+
+    // midpoint dots follow (positions only — markers are not recreated)
+    const open = openRing(ring);
+    midpointMarkersRef.current.forEach((m, i) => {
+      if (i < open.length) {
+        const next = (i + 1) % open.length;
+        const [lng, lat] = midpoint(open[i], open[next]);
+        m.setLatLng([lat, lng]);
+      }
+    });
+
+    // draw preview
+    const drawMode = modeRef.current === "draw";
+    const pts = drawPtsRef.current;
+    const all = cursorRef.current && drawMode ? [...pts, cursorRef.current] : pts;
+    previewLineRef.current?.setLatLngs(drawMode && all.length >= 2 ? (all as L.LatLngExpression[]) : []);
+    previewFillRef.current?.setLatLngs(drawMode && pts.length >= 3 ? ([closedRing(pts)] as L.LatLngExpression[][]) : []);
+  }, [mapLoaded, currentRing]);
+
   const refreshMap = useCallback(() => {
     const map = mapRef.current;
     if (!map || !mapLoaded) return;
+
+    // never tear down overlays mid-drag — defer until dragend
+    if (draggingRef.current !== null) {
+      refreshPendingRef.current = true;
+      return;
+    }
+
     const editId = modeRef.current !== "select" ? selIdRef.current : null;
 
     // buildings geojson
@@ -172,19 +236,18 @@ export default function MapEditor() {
     }
 
     // ring + vertex + midpoint overlays
-    const editB = editId ? buildingsRef.current.find((b) => b.id === editId) : null;
-    const ring = modeRef.current === "draw" ? drawPtsRef.current : editB ? openRing(editB.polygon) : [];
+    const ring = currentRing();
 
     ringLayerRef.current?.setLatLngs(ring.length >= 2 ? (closedRing(ring) as L.LatLngExpression[]) : []);
 
     vertexMarkersRef.current.forEach((m) => m.remove());
     vertexMarkersRef.current = [];
-    if (modeRef.current !== "select") {
+    if (modeRef.current === "edit") {
       const open = openRing(ring);
       open.forEach(([lng, lat], i) => {
         const m = L.marker([lat, lng], {
-          icon: vertexIcon(hovVRef.current === i),
-          draggable: modeRef.current === "edit",
+          icon: vertexIcon(false),
+          draggable: true,
           keyboard: false,
           zIndexOffset: 400,
         }).addTo(map);
@@ -192,28 +255,25 @@ export default function MapEditor() {
           draggingRef.current = i;
           pushUndo(buildingsRef.current); // snapshot before mutating
           map.dragging.disable();
+          // give the dragged dot the dragging style
+          const el = m.getElement()?.querySelector(".editor-vertex");
+          el?.classList.add("dragging");
         });
         m.on("drag", (e) => {
           const p = (e.target as L.Marker).getLatLng();
           onDragVertex(i, [p.lng, p.lat]);
+          syncDuringDrag(); // light path — rings/dots/polyline only
         });
         m.on("dragend", () => {
           draggingRef.current = null;
           map.dragging.enable();
-        });
-        m.on("mouseover", () => {
-          if (draggingRef.current !== null) return;
-          if (hovVRef.current !== i) { hovVRef.current = i; hovMRef.current = null; refreshMap(); }
-          map.getContainer().style.cursor = "grab";
-        });
-        m.on("mouseout", () => {
-          if (draggingRef.current !== null) return;
-          if (hovVRef.current === i) { hovVRef.current = null; refreshMap(); }
-          map.getContainer().style.cursor = "";
+          if (refreshPendingRef.current) {
+            refreshPendingRef.current = false;
+            refreshMap();
+          }
         });
         m.on("click", (e) => {
           L.DomEvent.stopPropagation(e);
-          if (modeRef.current !== "edit") return;
           if (draggingRef.current !== null) return;
           const id = selIdRef.current; if (!id) return;
           updBuildings((prev) => prev.map((b) => {
@@ -223,7 +283,6 @@ export default function MapEditor() {
             pts.splice(i, 1);
             return { ...b, polygon: pts };
           }));
-          hovVRef.current = null;
         });
         vertexMarkersRef.current.push(m);
       });
@@ -237,18 +296,19 @@ export default function MapEditor() {
         const next = (i + 1) % open.length;
         const [lng, lat] = midpoint(p, open[next]);
         const m = L.circleMarker([lat, lng], {
-          radius: hovMRef.current === i ? 6 : 4,
+          radius: 4,
           color: "#f59e0b",
-          weight: hovMRef.current === i ? 2.5 : 1.5,
+          weight: 1.5,
           fillColor: "#ffffff",
-          fillOpacity: hovMRef.current === i ? 1 : 0.55,
+          fillOpacity: 0.55,
+          className: "editor-midpoint",
         }).addTo(map);
         m.on("mouseover", () => {
-          if (hovMRef.current !== i) { hovMRef.current = i; hovVRef.current = null; refreshMap(); }
+          m.setStyle({ radius: 6, weight: 2.5, fillOpacity: 1 });
           map.getContainer().style.cursor = "copy";
         });
         m.on("mouseout", () => {
-          if (hovMRef.current === i) { hovMRef.current = null; refreshMap(); }
+          m.setStyle({ radius: 4, weight: 1.5, fillOpacity: 0.55 });
           map.getContainer().style.cursor = "";
         });
         m.on("click", (e) => {
@@ -261,7 +321,6 @@ export default function MapEditor() {
             pts.splice(i + 1, 0, midpoint(pts[i], pts[n]));
             return { ...b, polygon: pts };
           }));
-          hovMRef.current = null;
         });
         midpointMarkersRef.current.push(m);
       });
@@ -271,13 +330,11 @@ export default function MapEditor() {
     const drawMode = modeRef.current === "draw";
     const pts = drawPtsRef.current;
     const all = cursorRef.current && drawMode ? [...pts, cursorRef.current] : pts;
-    previewLineRef.current?.setLatLngs(
-      drawMode && all.length >= 2 ? (all as L.LatLngExpression[]) : []
-    );
-    previewFillRef.current?.setLatLngs(
-      drawMode && pts.length >= 3 ? ([closedRing(pts)] as L.LatLngExpression[][]) : []
-    );
-  }, [mapLoaded, updBuildings, vertexIcon, onDragVertex, pushUndo]);
+    previewLineRef.current?.setLatLngs(drawMode && all.length >= 2 ? (all as L.LatLngExpression[]) : []);
+    previewFillRef.current?.setLatLngs(drawMode && pts.length >= 3 ? ([closedRing(pts)] as L.LatLngExpression[][]) : []);
+  }, [mapLoaded, updBuildings, vertexIcon, onDragVertex, pushUndo, syncDuringDrag, currentRing]);
+
+  useEffect(() => { refreshMapRef.current = refreshMap; }, [refreshMap]);
 
   // ── load data ──────────────────────────────────────────────────────────────
 
@@ -362,7 +419,7 @@ export default function MapEditor() {
       setCursorCoords([lng, lat]);
       cursorRef.current = [lng, lat];
       if (modeRef.current === "draw") {
-        refreshMap();
+        syncDuringDrag();
         map.getContainer().style.cursor = "crosshair";
       }
     });
@@ -371,12 +428,12 @@ export default function MapEditor() {
       const { lng, lat } = e.latlng;
       if (modeRef.current === "draw") {
         drawPtsRef.current = [...drawPtsRef.current, [lng, lat]];
-        refreshMap();
+        syncDuringDrag();
         return;
       }
       if (modeRef.current === "select" && !e.propagatedFrom) {
         selIdRef.current = null; setSelectedId(null);
-        refreshMap();
+        refreshMapRef.current();
       }
     });
 
@@ -407,14 +464,19 @@ export default function MapEditor() {
   useEffect(() => {
     if (!mapLoaded) return;
     buildingsRef.current = buildings;
-    refreshMap();
-  }, [buildings, selectedId, mode, mapLoaded, refreshMap]);
+    // lightweight path when a drag/draw is active; full rebuild otherwise
+    if (draggingRef.current !== null || modeRef.current === "draw") {
+      syncDuringDrag();
+    } else {
+      refreshMap();
+    }
+  }, [buildings, selectedId, mode, mapLoaded, refreshMap, syncDuringDrag]);
 
   // ── editor actions ─────────────────────────────────────────────────────────
 
   const exitEdit = useCallback(() => {
     setMode("select"); modeRef.current = "select";
-    hovVRef.current = null; hovMRef.current = null; draggingRef.current = null;
+    draggingRef.current = null;
     if (mapRef.current) mapRef.current.getContainer().style.cursor = "";
     refreshMap();
   }, [refreshMap]);
@@ -438,14 +500,15 @@ export default function MapEditor() {
     selIdRef.current = id; setSelectedId(id); setExpandedId(id);
     const b = buildingsRef.current.find((b) => b.id === id);
     drawPtsRef.current = b ? openRing([...b.polygon]) : [];
-    setMode("draw"); modeRef.current = "draw"; refreshMap();
+    setMode("draw"); modeRef.current = "draw";
+    refreshMap();
     showToast("Click to place vertices — Enter / Esc to finish");
   }, [refreshMap]);
 
   const startEdit = useCallback((id: string) => {
     selIdRef.current = id; setSelectedId(id); setExpandedId(id);
     setMode("edit"); modeRef.current = "edit";
-    hovVRef.current = null; hovMRef.current = null; refreshMap();
+    refreshMap();
   }, [refreshMap]);
 
   const addBuilding = () => {
@@ -684,11 +747,9 @@ export default function MapEditor() {
             <span className="hl-indigo">Editing vertices</span>
             <span>drag to move</span>
             <span className="dot">·</span>
-            <span>click <span className="hl-red">red</span> to delete</span>
+            <span>click vertex to delete</span>
             <span className="dot">·</span>
             <span>click <span className="hl-white">ring dot</span> to insert</span>
-            <span className="dot">·</span>
-            <kbd>Esc</kbd> <span>done</span>
           </div>
         )}
 
@@ -739,7 +800,7 @@ export default function MapEditor() {
                     <div className="editor-guide-step-num">2</div>
                     <div className="editor-guide-step-body">
                       <strong>Edit its vertices <span className="editor-guide-tag indigo">Edit mode</span></strong>
-                      <p>Click <em>&quot;Edit vertices →&quot;</em> in the bottom pill, or <strong>double-click</strong> the building. Yellow dots appear on each vertex — drag them to reshape. Small ring dots on each edge midpoint can be clicked to insert a new vertex. Click a <span style={{ color: "#ef4444" }}>red (hovered) vertex</span> to delete it.</p>
+                      <p>Click <em>&quot;Edit vertices →&quot;</em> in the bottom pill, or <strong>double-click</strong> the building. Yellow dots appear on each vertex — drag them to reshape. Small ring dots on each edge midpoint can be clicked to insert a new vertex. Click a vertex to delete it (min 3 remain).</p>
                     </div>
                   </div>
                   <div className="editor-guide-step">
@@ -788,7 +849,7 @@ export default function MapEditor() {
                   <div className="editor-guide-step">
                     <div className="editor-guide-step-body">
                       <strong>Delete a vertex</strong>
-                      <p>Hover a yellow dot until it turns <span style={{ color: "var(--e-rose)" }}>red</span>, then click it. Minimum 3 vertices — the last three cannot be deleted.</p>
+                      <p>Click a vertex to delete it. Minimum 3 vertices — a polygon cannot have fewer.</p>
                     </div>
                   </div>
                   <div className="editor-guide-step">

@@ -324,7 +324,15 @@
   line-height: 1.45;
 }
 
-/* Editor vertex dots */
+/* Editor vertex dots — larger, generous hit area, CSS-only hover/drag states */
+.editor-vertex-wrap {
+  width: 26px !important;
+  height: 26px !important;
+  margin: -6px 0 0 -6px; /* recenter: 26px hit box around 14px dot */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 .editor-vertex {
   width: 14px;
   height: 14px;
@@ -333,13 +341,18 @@
   border: 2.5px solid #fff;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
   cursor: grab;
-  transition: background 0.1s, transform 0.1s;
+  pointer-events: none; /* hover handled by wrapper; avoids flicker */
+  transition: transform 0.08s ease, background 0.08s ease;
 }
-.editor-vertex:hover {
+.editor-vertex-wrap:hover .editor-vertex,
+.editor-vertex.dragging {
   background: #ef4444;
-  transform: scale(1.15);
-  cursor: grab;
-}
-.editor-vertex:active {
+  transform: scale(1.25);
   cursor: grabbing;
 }
+.editor-vertex.dragging .editor-vertex,
+.editor-vertex-wrap:active .editor-vertex {
+  cursor: grabbing;
+}
+
+/* Midpoint dots grow on hover via Leaflet style API (set in component) */
