@@ -1,16 +1,7 @@
 "use client";
 
 import { POICategory } from "@/types";
-
-const CATEGORIES: { id: POICategory; label: string; icon: string }[] = [
-  { id: "food", label: "Food", icon: "🍽️" },
-  { id: "mosque", label: "Prayer", icon: "🕌" },
-  { id: "atm", label: "ATM", icon: "🏧" },
-  { id: "parking", label: "Parking", icon: "🅿️" },
-  { id: "bus", label: "Bus", icon: "🚌" },
-  { id: "health", label: "Clinic", icon: "🏥" },
-  { id: "library", label: "Library", icon: "📚" },
-];
+import { POI_META } from "@/lib/poi";
 
 interface POIFilterProps {
   activeCategories: Set<POICategory>;
@@ -36,7 +27,7 @@ export default function POIFilter({ activeCategories, onChange }: POIFilterProps
       role="group"
       aria-label="Filter points of interest"
     >
-      {CATEGORIES.map(({ id, label, icon }) => {
+      {POI_META.map(({ id, label, Icon }) => {
         const active = activeCategories.has(id);
         return (
           <button
@@ -60,7 +51,7 @@ export default function POIFilter({ activeCategories, onChange }: POIFilterProps
                   }
             }
           >
-            <span aria-hidden="true">{icon}</span>
+            <Icon className="h-3.5 w-3.5" aria-hidden="true" />
             {label}
           </button>
         );

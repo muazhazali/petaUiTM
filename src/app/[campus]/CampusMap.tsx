@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, Suspense } from "react";
 import dynamic from "next/dynamic";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Building, Campus, POI, POICategory } from "@/types";
+import { Building, Campus, POI, POICategory, Room, Waypoint } from "@/types";
 import BuildingSheet from "@/components/BuildingSheet";
 import NavigationPanel from "@/components/NavigationPanel";
 import BuildingList from "@/components/BuildingList";
@@ -54,8 +54,8 @@ export interface RouteInfo {
 }
 
 async function fetchRoute(
-  from: Building,
-  to: Building
+  from: Waypoint,
+  to: Waypoint
 ): Promise<RouteInfo | null> {
   const fromCoord = `${from.coords[1]},${from.coords[0]}`;
   const toCoord = `${to.coords[1]},${to.coords[0]}`;
@@ -109,12 +109,16 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
 
   const [selectedBuilding, setSelectedBuilding] = useState<Building | null>(initial.building);
   const [navMode, setNavMode] = useState(initial.nav);
-  const [fromBuilding, setFromBuilding] = useState<Building | null>(initial.from);
-  const [toBuilding, setToBuilding] = useState<Building | null>(initial.to);
+  const [fromBuilding, setFromBuilding] = useState<Waypoint | null>(initial.from);
+  const [toBuilding, setToBuilding] = useState<Waypoint | null>(initial.to);
+  const [locating, setLocating] = useState(false);
+  const [locateError, setLocateError] = useState(false);
   const [routeState, setRouteState] = useState<{ key: string; info: RouteInfo | null } | null>(null);
+  const [routeRetryToken, setRouteRetryToken] = useState(0);
   const [pois, setPois] = useState<POI[]>([]);
   const [activeCategories, setActiveCategories] = useState<Set<POICategory>>(new Set());
   const [showMap, setShowMap] = useState(false); // mobile toggle
+  const [focusRoom, setFocusRoom] = useState<{ floor: number; roomId: string } | null>(null);
 
   // Load POIs for this campus
   useEffect(() => {
@@ -135,16 +139,17 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
       setRouteState({ key: routeKey, info });
     });
     return () => { cancelled = true; };
-  }, [routeKey, fromBuilding, toBuilding]);
+  }, [routeKey, fromBuilding, toBuilding, routeRetryToken]);
 
   const routeIsCurrent = routeKey !== null && routeState?.key === routeKey;
   const routeInfo = routeIsCurrent && routeState ? routeState.info : null;
   const routeGeoJSON = routeIsCurrent && routeState ? routeState.info?.geojson ?? null : null;
+  const routeFailed = routeKey !== null && routeIsCurrent && !routeState?.info;
   const routeLoading = routeKey !== null && !routeIsCurrent;
 
   // Sync URL params
   const syncUrl = useCallback(
-    (from: Building | null, to: Building | null, building: Building | null, isNav: boolean) => {
+    (from: Waypoint | null, to: Waypoint | null, building: Building | null, isNav: boolean) => {
       const params = new URLSearchParams();
       if (isNav) {
         if (from) params.set("from", from.id);
@@ -174,25 +179,39 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
         return;
       }
       setSelectedBuilding(building);
+      setFocusRoom(null);
       syncUrl(null, null, building, false);
     },
     [navMode, fromBuilding, toBuilding, syncUrl]
   );
 
+  const handleSelectRoom = useCallback(
+    (building: Building, room: Room) => {
+      if (navMode) {
+        handleBuildingSelect(building);
+        return;
+      }
+      setFocusRoom({ floor: room.floor, roomId: room.svgElementId });
+      setSelectedBuilding(building);
+      syncUrl(null, null, building, false);
+    },
+    [navMode, handleBuildingSelect, syncUrl]
+  );
+
   const handleSetFrom = useCallback(
-    (building: Building) => {
+    (point: Waypoint) => {
       setNavMode(true);
-      setFromBuilding(building);
-      syncUrl(building, toBuilding, null, true);
+      setFromBuilding(point);
+      syncUrl(point, toBuilding, null, true);
     },
     [toBuilding, syncUrl]
   );
 
   const handleSetTo = useCallback(
-    (building: Building) => {
+    (point: Waypoint) => {
       setNavMode(true);
-      setToBuilding(building);
-      syncUrl(fromBuilding, building, null, true);
+      setToBuilding(point);
+      syncUrl(fromBuilding, point, null, true);
     },
     [fromBuilding, syncUrl]
   );
@@ -210,6 +229,44 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
     setToBuilding(fromBuilding);
     syncUrl(toBuilding, fromBuilding, null, true);
   }, [fromBuilding, toBuilding, syncUrl]);
+
+  // POI popups ask the map component to start directions to that point.
+  const handleDirectionsTo = useCallback(
+    (point: Waypoint) => {
+      setNavMode(true);
+      setToBuilding(point);
+      syncUrl(fromBuilding, point, null, true);
+      setShowMap(false);
+    },
+    [fromBuilding, syncUrl]
+  );
+
+  const handleUseMyLocation = useCallback(() => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      setLocateError(true);
+      return;
+    }
+    setLocating(true);
+    setLocateError(false);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLocating(false);
+        const start: Waypoint = {
+          id: "my-location",
+          name: "My location",
+          coords: [pos.coords.latitude, pos.coords.longitude],
+        };
+        setNavMode(true);
+        setFromBuilding(start);
+        syncUrl(start, toBuilding, null, true);
+      },
+      () => {
+        setLocating(false);
+        setLocateError(true);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }, [toBuilding, syncUrl]);
 
   return (
     <div className="h-[100dvh] w-screen flex flex-col overflow-hidden">
@@ -252,23 +309,34 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
                       w-full lg:w-[420px] lg:flex-shrink-0
                       ${showMap ? "hidden lg:flex" : "flex"}`}
         >
-          {navMode ? (
-            <div className="flex-1 overflow-y-auto">
+          {navMode && (
+            <div className="flex-shrink-0 max-h-[46%] overflow-y-auto p-3">
               <NavigationPanel
                 buildings={buildings}
                 from={fromBuilding}
                 to={toBuilding}
                 isLoading={routeLoading}
                 routeInfo={routeInfo}
+                hasError={routeFailed}
+                onRetry={() => { setRouteState(null); setRouteRetryToken((t) => t + 1); }}
                 onSwap={handleSwap}
                 onSetFrom={(b) => { setFromBuilding(b); syncUrl(b, toBuilding, null, true); }}
                 onSetTo={(b) => { setToBuilding(b); syncUrl(fromBuilding, b, null, true); }}
                 onClearFrom={() => { setFromBuilding(null); syncUrl(null, toBuilding, null, true); }}
                 onClearTo={() => { setToBuilding(null); syncUrl(fromBuilding, null, null, true); }}
+                onUseMyLocation={handleUseMyLocation}
+                locating={locating}
                 onClose={handleCloseNav}
               />
+              {locateError && (
+                <p className="px-4 pb-2 text-[11px] text-[#8A2E22]">
+                  Couldn&apos;t get your location. Check browser permissions and try again.
+                </p>
+              )}
             </div>
-          ) : (
+          )}
+
+          <div className="flex-1 min-h-0">
             <BuildingList
               buildings={buildings}
               selectedBuilding={selectedBuilding}
@@ -281,22 +349,21 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
               pois={pois}
               activeCategories={activeCategories}
               onCategoriesChange={setActiveCategories}
+              onSelectRoom={handleSelectRoom}
             />
-          )}
+          </div>
 
           {/* Mobile: Show Map FAB */}
-          {!navMode && (
-            <div className="lg:hidden absolute bottom-4 right-4 z-20">
-              <button
-                onClick={() => setShowMap(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold text-white shadow-lg active:scale-95 transition-all"
-                style={{ background: "#17245B" }}
-              >
-                <Map className="h-4 w-4" />
-                Show Map
-              </button>
-            </div>
-          )}
+          <div className="lg:hidden absolute bottom-4 right-4 z-20">
+            <button
+              onClick={() => setShowMap(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold text-white shadow-lg active:scale-95 transition-all"
+              style={{ background: "#17245B" }}
+            >
+              <Map className="h-4 w-4" />
+              Show Map
+            </button>
+          </div>
         </div>
 
         {/* Right panel — map */}
@@ -327,6 +394,7 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
             toBuilding={toBuilding}
             pois={pois}
             activeCategories={activeCategories}
+            onDirectionsTo={handleDirectionsTo}
           />
         </div>
       </div>
@@ -334,9 +402,11 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
       {/* Building info sheet — unchanged */}
       <BuildingSheet
         building={navMode ? null : selectedBuilding}
-        onClose={() => setSelectedBuilding(null)}
+        onClose={() => { setSelectedBuilding(null); setFocusRoom(null); }}
         onSetFrom={handleSetFrom}
         onSetTo={handleSetTo}
+        focusFloor={focusRoom?.floor}
+        focusRoomId={focusRoom?.roomId}
       />
     </div>
   );

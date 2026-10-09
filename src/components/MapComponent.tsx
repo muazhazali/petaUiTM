@@ -2,27 +2,8 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import L from "leaflet";
-import { Building, POI, POICategory } from "@/types";
-
-const POI_COLORS: Record<POICategory, string> = {
-  food: "#F5BF32",
-  mosque: "#5B267B",
-  atm: "#17245B",
-  parking: "#8547A9",
-  bus: "#C79A14",
-  health: "#B03A2B",
-  library: "#374C9E",
-};
-
-const POI_ICONS: Record<POICategory, string> = {
-  food: "🍽️",
-  mosque: "🕌",
-  atm: "🏧",
-  parking: "🅿️",
-  bus: "🚌",
-  health: "🏥",
-  library: "📚",
-};
+import { Building, POI, POICategory, Waypoint } from "@/types";
+import { POI_COLORS, poiIconMarkup } from "@/lib/poi";
 
 const OSM_TILES = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 const OSM_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
@@ -33,10 +14,11 @@ interface MapComponentProps {
   selectedBuilding: Building | null;
   onBuildingSelect: (building: Building | null) => void;
   routeGeoJSON?: GeoJSON.FeatureCollection | null;
-  fromBuilding?: Building | null;
-  toBuilding?: Building | null;
+  fromBuilding?: Waypoint | null;
+  toBuilding?: Waypoint | null;
   pois?: POI[];
   activeCategories?: Set<POICategory>;
+  onDirectionsTo?: (point: Waypoint) => void;
 }
 
 const SELECTED_STYLE = { color: "#17245B", weight: 2.5, fillColor: "#5B267B", fillOpacity: 0.7 };
@@ -52,6 +34,7 @@ export default function MapComponent({
   toBuilding,
   pois = [],
   activeCategories,
+  onDirectionsTo,
 }: MapComponentProps) {
   const mapRef = useRef<L.Map | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -64,6 +47,11 @@ export default function MapComponent({
   const poiMarkersRef = useRef<L.Marker[]>([]);
   const buildingMarkersRef = useRef<L.Marker[]>([]);
   const selectedIdRef = useRef<string | null>(null);
+  const directionsToRef = useRef<MapComponentProps["onDirectionsTo"]>(undefined);
+
+  useEffect(() => {
+    directionsToRef.current = onDirectionsTo;
+  }, [onDirectionsTo]);
 
   const handleBuildingClick = useCallback(
     (buildingId: string) => {
@@ -167,7 +155,8 @@ export default function MapComponent({
     buildingsLayerRef.current = buildingsLayer;
 
     // Route layer (non-interactive so clicks pass through)
-    // Purple casing under a yellow core, matching the UiTM accent pair
+    // Purple casing under a yellow core, matching the UiTM accent pair.
+    // Rendered above building polygons so the trail stays visible.
     const routeLayer = L.geoJSON(
       { type: "FeatureCollection", features: [] } as GeoJSON.FeatureCollection,
       {
@@ -182,8 +171,8 @@ export default function MapComponent({
         interactive: false,
       }
     ).addTo(map);
-    routeCore.bringToBack();
-    routeLayer.bringToBack();
+    routeLayer.bringToFront();
+    routeCore.bringToFront();
     routeCoreRef.current = routeCore;
     routeLayerRef.current = routeLayer;
 
@@ -250,9 +239,9 @@ export default function MapComponent({
     if (routeGeoJSON) {
       layer.addData(routeGeoJSON);
       core.addData(routeGeoJSON);
-      // keep purple casing below yellow core, both below buildings
-      core.eachLayer((sub) => (sub as L.Polyline).bringToBack());
-      layer.eachLayer((sub) => (sub as L.Polyline).bringToBack());
+      // keep the trail above building polygons: casing first, yellow core on top
+      layer.eachLayer((sub) => (sub as L.Polyline).bringToFront());
+      core.eachLayer((sub) => (sub as L.Polyline).bringToFront());
     }
   }, [routeGeoJSON]);
 
@@ -304,11 +293,6 @@ export default function MapComponent({
           keyboard: false,
         }
       ).addTo(map);
-      map.flyTo(
-        [fromBuilding.coords[0], fromBuilding.coords[1]],
-        Math.max(map.getZoom(), 16),
-        { duration: 0.6 }
-      );
     }
   }, [fromBuilding]);
 
@@ -332,13 +316,25 @@ export default function MapComponent({
           keyboard: false,
         }
       ).addTo(map);
-      map.flyTo(
-        [toBuilding.coords[0], toBuilding.coords[1]],
-        Math.max(map.getZoom(), 16),
-        { duration: 0.6 }
-      );
     }
   }, [toBuilding]);
+
+  // Fit both waypoints in view in a single move (avoids racing flyTo calls)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (fromBuilding && toBuilding) {
+      const bounds = L.latLngBounds(
+        [fromBuilding.coords[0], fromBuilding.coords[1]],
+        [toBuilding.coords[0], toBuilding.coords[1]]
+      );
+      map.flyToBounds(bounds, { padding: [60, 60], duration: 0.8, maxZoom: 17 });
+    } else if (fromBuilding) {
+      map.flyTo([fromBuilding.coords[0], fromBuilding.coords[1]], Math.max(map.getZoom(), 16), { duration: 0.6 });
+    } else if (toBuilding) {
+      map.flyTo([toBuilding.coords[0], toBuilding.coords[1]], Math.max(map.getZoom(), 16), { duration: 0.6 });
+    }
+  }, [fromBuilding, toBuilding]);
 
   // POI markers
   useEffect(() => {
@@ -356,7 +352,7 @@ export default function MapComponent({
       const marker = L.marker([poi.coords[0], poi.coords[1]], {
         icon: L.divIcon({
           className: "marker-poi-wrapper",
-          html: `<div title="${poi.name}" style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:999px;border:2px solid white;box-shadow:0 4px 10px rgba(0,0,0,0.2);font-size:16px;cursor:pointer;user-select:none;background:${POI_COLORS[poi.category] ?? "#374C9E"}">${POI_ICONS[poi.category] ?? "📍"}</div>`,
+          html: `<div title="${poi.name}" style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:999px;border:2px solid white;box-shadow:0 4px 10px rgba(0,0,0,0.2);cursor:pointer;user-select:none;background:${POI_COLORS[poi.category] ?? "#374C9E"}">${poiIconMarkup(poi.category)}</div>`,
           iconSize: [32, 32],
           iconAnchor: [16, 16],
         }),
@@ -367,11 +363,12 @@ export default function MapComponent({
         L.popup({
           offset: [0, -18],
           closeButton: false,
-          maxWidth: 200,
+          maxWidth: 220,
         }).setContent(
           `<div style="font-family:sans-serif;padding:4px 2px">
             <div style="font-weight:600;font-size:13px;color:#111">${poi.name}</div>
             ${poi.description ? `<div style="font-size:11px;color:#666;margin-top:2px">${poi.description}</div>` : ""}
+            <button type="button" class="poi-directions-btn" data-poi-id="${poi.id}" style="margin-top:8px;display:inline-flex;align-items:center;gap:4px;padding:6px 10px;border-radius:8px;border:0;background:#F5BF32;color:#17245B;font-size:11px;font-weight:600;cursor:pointer">Directions</button>
           </div>`
         )
       );
@@ -379,6 +376,24 @@ export default function MapComponent({
       poiMarkersRef.current.push(marker);
     });
   }, [pois, activeCategories]);
+
+  // Delegate POI popup "Directions" clicks to the consumer
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const container = map.getContainer();
+    const handler = (e: Event) => {
+      const target = (e.target as HTMLElement)?.closest?.(".poi-directions-btn") as HTMLElement | null;
+      if (!target) return;
+      const poiId = target.dataset.poiId;
+      const poi = pois.find((p) => p.id === poiId);
+      if (poi && directionsToRef.current) {
+        directionsToRef.current({ id: poi.id, name: poi.name, coords: poi.coords });
+      }
+    };
+    container.addEventListener("click", handler);
+    return () => container.removeEventListener("click", handler);
+  }, [pois]);
 
   return <div ref={containerRef} className="w-full h-full" />;
 }

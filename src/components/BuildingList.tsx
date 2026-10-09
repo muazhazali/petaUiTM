@@ -2,22 +2,30 @@
 
 import { useState, useMemo, useEffect, useRef } from "react";
 import Fuse from "fuse.js";
-import { Building, POI, POICategory } from "@/types";
+import { Building, POI, POICategory, Room, Waypoint } from "@/types";
 import POIFilter from "@/components/POIFilter";
-import { Search, Clock, Layers, Navigation } from "lucide-react";
+import { Search, Clock, Layers, Navigation, DoorOpen } from "lucide-react";
 
 interface BuildingListProps {
   buildings: Building[];
   selectedBuilding: Building | null;
   onSelectBuilding: (b: Building) => void;
   navMode: boolean;
-  fromBuilding: Building | null;
-  toBuilding: Building | null;
+  fromBuilding: Waypoint | null;
+  toBuilding: Waypoint | null;
   onSetFrom: (b: Building) => void;
   onSetTo: (b: Building) => void;
   pois: POI[];
   activeCategories: Set<POICategory>;
   onCategoriesChange: (cats: Set<POICategory>) => void;
+  onSelectRoom?: (b: Building, room: Room) => void;
+}
+
+interface RoomSearchItem {
+  building: Building;
+  room: Room;
+  name: string;
+  subtitle: string;
 }
 
 // Collect unique facilities across all buildings for filter chips
@@ -40,9 +48,11 @@ export default function BuildingList({
   onSetTo,
   activeCategories,
   onCategoriesChange,
+  onSelectRoom,
 }: BuildingListProps) {
   const [query, setQuery] = useState("");
   const [activeFacility, setActiveFacility] = useState<string | null>(null);
+  const [roomIndex, setRoomIndex] = useState<RoomSearchItem[]>([]);
   const selectedCardRef = useRef<HTMLDivElement | null>(null);
 
   const fuse = useMemo(
@@ -53,6 +63,48 @@ export default function BuildingList({
       }),
     [buildings]
   );
+
+  // Load room data for every building so search can reach room level
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all(
+      buildings.map((b) =>
+        fetch(`/data/rooms/${b.id}.json`)
+          .then((r) => (r.ok ? r.json() : []))
+          .then((rooms: Room[]) =>
+            rooms.map((room) => ({
+              building: b,
+              room,
+              name: room.name,
+              subtitle: `${b.shortName} · Floor ${room.floor}`,
+            }))
+          )
+          .catch(() => [] as RoomSearchItem[])
+      )
+    ).then((items) => {
+      if (!cancelled) setRoomIndex(items.flat());
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [buildings]);
+
+  const roomFuse = useMemo(
+    () =>
+      new Fuse(roomIndex, {
+        keys: ["name", "subtitle", "building.name", "building.shortName"],
+        threshold: 0.35,
+      }),
+    [roomIndex]
+  );
+
+  const roomResults = useMemo(() => {
+    if (!query.trim() || roomIndex.length === 0) return [];
+    return roomFuse
+      .search(query.trim())
+      .map((r) => r.item)
+      .slice(0, 8);
+  }, [query, roomIndex, roomFuse]);
 
   const uniqueFacilities = useMemo(() => getUniqueFacilities(buildings), [buildings]);
 
@@ -85,10 +137,36 @@ export default function BuildingList({
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search buildings…"
+            placeholder="Search buildings or rooms…"
             className="w-full pl-9 pr-3 py-2 text-sm bg-white rounded-xl border border-[#DBE0F1] focus:border-[#8A96CB] focus:outline-none transition-colors placeholder:text-[#8A96CB]"
           />
         </div>
+
+        {/* Room results */}
+        {roomResults.length > 0 && (
+          <div className="rounded-xl border border-[#C4A9DD] bg-[#F7F2FB] overflow-hidden">
+            <p className="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#8A96CB]">
+              Rooms
+            </p>
+            <div className="divide-y divide-[#EEE6F6]">
+              {roomResults.map(({ building, room }) => (
+                <button
+                  key={room.id}
+                  onClick={() => onSelectRoom?.(building, room)}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-[#EEE6F6]"
+                >
+                  <DoorOpen className="h-3.5 w-3.5 flex-shrink-0" style={{ color: "#5B267B" }} aria-hidden="true" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold text-[#17245B] truncate">{room.name}</p>
+                    <p className="text-[10px] text-[#6B7399] truncate">
+                      {building.shortName} · Floor {room.floor}
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Facility filter chips */}
         {uniqueFacilities.length > 0 && (

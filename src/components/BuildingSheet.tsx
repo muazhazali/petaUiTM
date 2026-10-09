@@ -11,6 +11,10 @@ interface BuildingSheetProps {
   onClose: () => void;
   onSetFrom?: (building: Building) => void;
   onSetTo?: (building: Building) => void;
+  /** When set (deep-linked from room search), open the floor-plan tab on this floor. */
+  focusFloor?: number | null;
+  /** SVG element id of the room to highlight on open. */
+  focusRoomId?: string | null;
 }
 
 const typeConfig: Record<string, { bg: string; text: string; dot: string }> = {
@@ -24,7 +28,7 @@ type Tab = "info" | "floorplan";
 
 const GREEN = "#17245B";
 
-export default function BuildingSheet({ building, onClose, onSetFrom, onSetTo }: BuildingSheetProps) {
+export default function BuildingSheet({ building, onClose, onSetFrom, onSetTo, focusFloor, focusRoomId }: BuildingSheetProps) {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [selectedFloor, setSelectedFloor] = useState(1);
   const [activeTab, setActiveTab] = useState<Tab>("info");
@@ -47,9 +51,9 @@ export default function BuildingSheet({ building, onClose, onSetFrom, onSetTo }:
 
     Promise.resolve().then(() => {
       if (!controller.signal.aborted) {
-        setSelectedFloor(1);
-        setActiveTab("info");
-        setSelectedRoomId(null);
+        setSelectedFloor(focusFloor ?? 1);
+        setActiveTab(focusRoomId || focusFloor ? "floorplan" : "info");
+        setSelectedRoomId(focusRoomId ?? null);
       }
     });
 
@@ -63,7 +67,7 @@ export default function BuildingSheet({ building, onClose, onSetFrom, onSetTo }:
       });
 
     return () => controller.abort();
-  }, [building]);
+  }, [building, focusFloor, focusRoomId]);
 
   const floorRooms = rooms.filter((r) => r.floor === selectedFloor);
   const floors = Array.from({ length: building?.floors ?? 0 }, (_, i) => i + 1);

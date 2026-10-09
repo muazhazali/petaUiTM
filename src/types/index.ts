@@ -30,6 +30,13 @@ export interface Room {
 
 export type POICategory = "food" | "mosque" | "atm" | "parking" | "bus" | "health" | "library";
 
+/** Minimal routable point. Buildings structurally satisfy this. */
+export interface Waypoint {
+  id: string;
+  name: string;
+  coords: [number, number]; // [lat, lng]
+}
+
 export interface POI {
   id: string;
   campus: string;

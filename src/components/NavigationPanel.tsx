@@ -2,21 +2,25 @@
 
 import { useState, useEffect, useRef } from "react";
 import Fuse from "fuse.js";
-import { Building } from "@/types";
+import { Building, Waypoint } from "@/types";
 import { RouteInfo } from "@/app/[campus]/CampusMap";
-import { ArrowUpDown, Navigation2, X, MapPin, Flag, Clock, Ruler, Share2, ChevronDown, ChevronUp, CornerDownRight, Search } from "lucide-react";
+import { ArrowUpDown, Navigation2, X, MapPin, Flag, Clock, Ruler, Share2, ChevronDown, ChevronUp, CornerDownRight, Search, AlertTriangle, RotateCw, LocateFixed } from "lucide-react";
 
 interface NavigationPanelProps {
   buildings: Building[];
-  from: Building | null;
-  to: Building | null;
+  from: Waypoint | null;
+  to: Waypoint | null;
   isLoading: boolean;
   routeInfo: RouteInfo | null;
+  hasError?: boolean;
+  onRetry?: () => void;
   onSwap: () => void;
-  onSetFrom: (b: Building) => void;
-  onSetTo: (b: Building) => void;
+  onSetFrom: (b: Waypoint) => void;
+  onSetTo: (b: Waypoint) => void;
   onClearFrom: () => void;
   onClearTo: () => void;
+  onUseMyLocation?: () => void;
+  locating?: boolean;
   onClose: () => void;
 }
 
@@ -72,13 +76,13 @@ function WaypointInput({
   onSelect,
   onClear,
 }: {
-  value: Building | null;
+  value: Waypoint | null;
   placeholder: string;
   icon: React.ReactNode;
   accentColor: string;
   accentBg: string;
   buildings: Building[];
-  onSelect: (b: Building) => void;
+  onSelect: (b: Waypoint) => void;
   onClear: () => void;
 }) {
   const [query, setQuery] = useState("");
@@ -213,15 +217,19 @@ export default function NavigationPanel({
   to,
   isLoading,
   routeInfo,
+  hasError,
+  onRetry,
   onSwap,
   onSetFrom,
   onSetTo,
   onClearFrom,
   onClearTo,
+  onUseMyLocation,
+  locating,
   onClose,
 }: NavigationPanelProps) {
   const bothSet = from && to;
-  const [stepsOpen, setStepsOpen] = useState(false);
+  const [stepsOpen, setStepsOpen] = useState(true);
   const [copied, setCopied] = useState(false);
 
   function handleShare() {
@@ -320,6 +328,21 @@ export default function NavigationPanel({
         </div>
       </div>
 
+      {/* Use my location */}
+      {!from && onUseMyLocation && (
+        <div className="px-4 pb-1 -mt-1">
+          <button
+            onClick={onUseMyLocation}
+            disabled={locating}
+            className="flex items-center gap-1.5 text-xs font-medium transition-colors disabled:opacity-60"
+            style={{ color: "#5B267B" }}
+          >
+            <LocateFixed className="h-3.5 w-3.5" aria-hidden="true" />
+            {locating ? "Locating…" : "Use my current location as start"}
+          </button>
+        </div>
+      )}
+
       {/* Status / route summary */}
       <div className="px-4 pb-3 flex flex-col gap-2">
         {isLoading ? (
@@ -333,6 +356,27 @@ export default function NavigationPanel({
               <span className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:300ms]" style={{ background: GREEN }} />
             </div>
             <span className="text-xs font-medium" style={{ color: GREEN }} aria-live="polite">Finding best route…</span>
+          </div>
+        ) : bothSet && hasError ? (
+          <div
+            className="flex items-center gap-2.5 py-2 px-3 rounded-xl"
+            style={{ background: "rgba(192,58,43,0.06)", border: "1px solid rgba(192,58,43,0.25)" }}
+            role="alert"
+          >
+            <AlertTriangle className="h-4 w-4 flex-shrink-0" style={{ color: "#C03A2B" }} aria-hidden="true" />
+            <span className="text-xs font-medium text-[#8A2E22] flex-1">
+              Couldn&apos;t find a walking route between these points.
+            </span>
+            {onRetry && (
+              <button
+                onClick={onRetry}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold transition-colors hover:bg-[rgba(192,58,43,0.1)]"
+                style={{ color: "#C03A2B" }}
+              >
+                <RotateCw className="h-3 w-3" aria-hidden="true" />
+                Retry
+              </button>
+            )}
           </div>
         ) : bothSet && routeInfo ? (
           <>
