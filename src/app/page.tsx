@@ -26,9 +26,9 @@ async function getCampuses(): Promise<Campus[]> {
 }
 
 const FEATURES = [
-  { icon: Building2, label: "Buildings", detail: "Tap any polygon on the map" },
-  { icon: Route,     label: "Directions", detail: "Walking routes via OSRM" },
-  { icon: Map,       label: "Floor plans", detail: "Room-level search" },
+  { icon: Building2, label: "Buildings", detail: "Find any faculty in two taps" },
+  { icon: Route,     label: "Directions", detail: "Step-by-step walking routes" },
+  { icon: Map,       label: "Floor plans", detail: "Search down to the room number" },
 ];
 
 export default async function Home() {
@@ -124,7 +124,7 @@ export default async function Home() {
 
           {/* GitHub link */}
           <a
-            href="https://github.com/muazarif12/petaUiTM"
+            href="https://github.com/muazhazali/petaUiTM"
             target="_blank"
             rel="noopener noreferrer"
             className="github-btn"
@@ -150,10 +150,9 @@ export default async function Home() {
               fontWeight: 400,
             }}
           >
-            Navigate{" "}
+            Never get lost at{" "}
             <span style={{ color: "oklch(0.32 0.09 155)", fontStyle: "italic" }}>UiTM</span>
-            <br />
-            with confidence.
+            {" "}again.
           </h1>
 
           <p
@@ -166,8 +165,8 @@ export default async function Home() {
               marginBottom: 0,
             }}
           >
-            Interactive open-source maps for Universiti Teknologi MARA campuses.
-            Find buildings, explore facilities, and get walking directions.
+            An interactive map of UiTM campus. Search buildings and get
+            walking directions in seconds.
           </p>
         </section>
 
@@ -304,7 +303,7 @@ export default async function Home() {
             OSM-based · MIT License
           </p>
           <a
-            href="https://github.com/muazarif12/petaUiTM"
+            href="https://github.com/muazhazali/petaUiTM"
             target="_blank"
             rel="noopener noreferrer"
             style={{

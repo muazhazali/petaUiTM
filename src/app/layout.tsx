@@ -22,8 +22,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PetaUiTM - Interactive Campus Map",
-  description: "Navigate UiTM campuses with an interactive map, building info, and indoor floor plans.",
+  title: "PetaUiTM — Interactive maps for UiTM campuses",
+  description:
+    "Open-source interactive maps for Universiti Teknologi MARA. Search campus buildings, get walking directions, and explore floor plans. Start with UiTM Shah Alam.",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
