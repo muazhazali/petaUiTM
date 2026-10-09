@@ -27,7 +27,7 @@ function getUniqueFacilities(buildings: Building[]): string[] {
   return Array.from(set).sort();
 }
 
-const GREEN = "oklch(0.32 0.09 155)";
+const GREEN = "#17245B";
 
 export default function BuildingList({
   buildings,
@@ -77,16 +77,16 @@ export default function BuildingList({
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Search + filters */}
-      <div className="flex-shrink-0 px-4 pt-3 pb-2 border-b border-stone-100 space-y-2.5">
+      <div className="flex-shrink-0 px-4 pt-3 pb-2 border-b border-[#DBE0F1] space-y-2.5">
         {/* Search input */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400 pointer-events-none" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8A96CB] pointer-events-none" />
           <input
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search buildings…"
-            className="w-full pl-9 pr-3 py-2 text-sm bg-stone-100 rounded-xl border border-transparent focus:border-stone-300 focus:bg-white focus:outline-none transition-colors placeholder:text-stone-400"
+            className="w-full pl-9 pr-3 py-2 text-sm bg-white rounded-xl border border-[#DBE0F1] focus:border-[#8A96CB] focus:outline-none transition-colors placeholder:text-[#8A96CB]"
           />
         </div>
 
@@ -99,7 +99,7 @@ export default function BuildingList({
               style={
                 activeFacility === null
                   ? { background: GREEN, color: "white", border: `1px solid ${GREEN}` }
-                  : { background: "rgba(0,0,0,0.05)", border: "1px solid transparent", color: "#57534e" }
+                  : { background: "rgba(23,36,91,0.05)", border: "1px solid transparent", color: "#4C5370" }
               }
             >
               All
@@ -113,7 +113,7 @@ export default function BuildingList({
                 style={
                   activeFacility === f
                     ? { background: GREEN, color: "white", border: `1px solid ${GREEN}` }
-                    : { background: "rgba(0,0,0,0.05)", border: "1px solid transparent", color: "#57534e" }
+                    : { background: "rgba(23,36,91,0.05)", border: "1px solid transparent", color: "#4C5370" }
                 }
               >
                 {f}
@@ -127,7 +127,7 @@ export default function BuildingList({
       </div>
 
       {/* Building count */}
-      <div className="flex-shrink-0 px-4 py-2 text-xs text-stone-400 font-medium border-b border-stone-50">
+      <div className="flex-shrink-0 px-4 py-2 text-xs text-[#6B7399] font-medium border-b border-[#EEF1F9]">
         {filteredBuildings.length} building{filteredBuildings.length !== 1 ? "s" : ""}
         {query && ` matching "${query}"`}
       </div>
@@ -135,19 +135,19 @@ export default function BuildingList({
       {/* Scrollable building list */}
       <div className="flex-1 overflow-y-auto">
         {filteredBuildings.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-stone-400 gap-2">
+          <div className="flex flex-col items-center justify-center py-16 text-[#6B7399] gap-2">
             <Search className="h-8 w-8 opacity-30" />
             <p className="text-sm font-medium">No buildings found</p>
-            <button
-              onClick={() => { setQuery(""); setActiveFacility(null); }}
-              className="text-xs underline underline-offset-2 mt-1"
-              style={{ color: GREEN }}
-            >
-              Clear filters
-            </button>
+              <button
+                onClick={() => { setQuery(""); setActiveFacility(null); }}
+                className="text-xs underline underline-offset-2 mt-1"
+                style={{ color: "#5B267B" }}
+              >
+                Clear filters
+              </button>
           </div>
         ) : (
-          <div className="divide-y divide-stone-50">
+          <div className="divide-y divide-[#EEF1F9]">
             {filteredBuildings.map((b) => {
               const isSelected = selectedBuilding?.id === b.id;
               const isFrom = fromBuilding?.id === b.id;
@@ -161,10 +161,10 @@ export default function BuildingList({
                   tabIndex={0}
                   onClick={() => !navMode && onSelectBuilding(b)}
                   onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); if (!navMode) onSelectBuilding(b); } }}
-                  className="px-4 py-3.5 cursor-pointer transition-colors hover:bg-stone-50 focus:outline-none focus-visible:bg-stone-50"
+                  className="px-4 py-3.5 cursor-pointer transition-colors hover:bg-[#F5F7FC] focus:outline-none focus-visible:bg-[#F5F7FC]"
                   style={
                     isSelected
-                      ? { borderLeft: `3px solid ${GREEN}`, background: "oklch(0.97 0.01 155)" }
+                      ? { borderLeft: `3px solid #F5BF32`, background: "rgba(23,36,91,0.06)" }
                       : { borderLeft: "3px solid transparent" }
                   }
                 >
@@ -174,39 +174,39 @@ export default function BuildingList({
                       {/* Building icon */}
                       <div
                         className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold"
-                        style={{ background: isSelected ? GREEN : "oklch(0.45 0.09 155)" }}
+                        style={{ background: isSelected ? GREEN : "#5B267B" }}
                       >
                         {b.shortName.slice(0, 2)}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-stone-800 truncate leading-tight">{b.name}</p>
-                        <p className="text-xs text-stone-400 truncate">{b.shortName}</p>
+                        <p className="text-sm font-semibold text-[#17245B] truncate leading-tight">{b.name}</p>
+                        <p className="text-xs text-[#8A96CB] truncate">{b.shortName}</p>
                       </div>
                     </div>
                     {/* Nav mode badges */}
                     {isFrom && (
-                      <span className="flex-shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">FROM</span>
+                      <span className="flex-shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#FDF4DC] text-[#17245B] border border-[#F5BF32]">FROM</span>
                     )}
                     {isTo && (
-                      <span className="flex-shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700">TO</span>
+                      <span className="flex-shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#EEE6F6] text-[#5B267B] border border-[#C4A9DD]">TO</span>
                     )}
                   </div>
 
                   {/* Description */}
                   {b.description && (
-                    <p className="text-xs text-stone-500 line-clamp-2 mb-2 leading-relaxed">{b.description}</p>
+                    <p className="text-xs text-[#4C5370] line-clamp-2 mb-2 leading-relaxed">{b.description}</p>
                   )}
 
                   {/* Meta row */}
                   <div className="flex items-center gap-3 mb-2">
                     {b.hours && (
-                      <span className="flex items-center gap-1 text-xs text-stone-400">
+                      <span className="flex items-center gap-1 text-xs text-[#6B7399]">
                         <Clock className="h-3 w-3" />
                         {b.hours}
                       </span>
                     )}
                     {b.floors && (
-                      <span className="flex items-center gap-1 text-xs text-stone-400">
+                      <span className="flex items-center gap-1 text-xs text-[#6B7399]">
                         <Layers className="h-3 w-3" />
                         {b.floors} floor{b.floors !== 1 ? "s" : ""}
                       </span>
@@ -220,13 +220,13 @@ export default function BuildingList({
                         <span
                           key={f}
                           className="text-[10px] px-1.5 py-0.5 rounded-md font-medium capitalize"
-                          style={{ background: "rgba(0,0,0,0.05)", color: "#57534e" }}
+                          style={{ background: "rgba(23,36,91,0.05)", color: "#4C5370" }}
                         >
                           {f}
                         </span>
                       ))}
                       {b.facilities.length > 3 && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-md font-medium text-stone-400">
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-md font-medium text-[#8A96CB]">
                           +{b.facilities.length - 3} more
                         </span>
                       )}
@@ -241,8 +241,8 @@ export default function BuildingList({
                         className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-medium transition-all active:scale-95 border"
                         style={
                           isFrom
-                            ? { background: "#d1fae5", borderColor: "#6ee7b7", color: "#065f46" }
-                            : { background: "white", borderColor: "#e7e5e4", color: "#57534e" }
+                            ? { background: "#FDF4DC", borderColor: "#F5BF32", color: "#17245B" }
+                            : { background: "white", borderColor: "#DBE0F1", color: "#4C5370" }
                         }
                       >
                         <Navigation className="h-3 w-3" />
@@ -253,8 +253,8 @@ export default function BuildingList({
                         className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-medium transition-all active:scale-95 border"
                         style={
                           isTo
-                            ? { background: "#ffe4e6", borderColor: "#fda4af", color: "#9f1239" }
-                            : { background: "white", borderColor: "#e7e5e4", color: "#57534e" }
+                            ? { background: "#EEE6F6", borderColor: "#C4A9DD", color: "#5B267B" }
+                            : { background: "white", borderColor: "#DBE0F1", color: "#4C5370" }
                         }
                       >
                         <Navigation className="h-3 w-3 rotate-180" />

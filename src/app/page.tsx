@@ -37,7 +37,7 @@ export default async function Home() {
   return (
     <main
       className="min-h-screen relative overflow-hidden"
-      style={{ background: "#fafaf8", fontFamily: "var(--font-ibm), 'IBM Plex Sans', sans-serif" }}
+      style={{ background: "#F5F7FC", fontFamily: "var(--font-ibm), 'IBM Plex Sans', sans-serif" }}
     >
       {/* ── Subtle dot-grid background ── */}
       <div
@@ -46,7 +46,7 @@ export default async function Home() {
           position: "absolute",
           inset: 0,
           backgroundImage:
-            "radial-gradient(circle, rgba(30,82,53,0.13) 1px, transparent 1px)",
+            "radial-gradient(circle, rgba(23,36,91,0.13) 1px, transparent 1px)",
           backgroundSize: "22px 22px",
           pointerEvents: "none",
           zIndex: 0,
@@ -65,7 +65,7 @@ export default async function Home() {
           maxWidth: 680,
           maxHeight: 680,
           background:
-            "radial-gradient(ellipse at 85% 10%, rgba(30,82,53,0.07) 0%, transparent 65%)",
+            "radial-gradient(ellipse at 85% 10%, rgba(91,38,123,0.08) 0%, transparent 65%)",
           pointerEvents: "none",
           zIndex: 0,
         }}
@@ -101,20 +101,20 @@ export default async function Home() {
                 width: 34,
                 height: 34,
                 borderRadius: 9,
-                background: "oklch(0.32 0.09 155)",
+                background: "#17245B",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 flexShrink: 0,
               }}
             >
-              <MapPin style={{ width: 15, height: 15, color: "#fff" }} strokeWidth={2.2} />
+              <MapPin style={{ width: 15, height: 15, color: "#F5BF32" }} strokeWidth={2.2} />
             </div>
             <span
               style={{
                 fontSize: 15,
                 fontWeight: 600,
-                color: "oklch(0.25 0.07 155)",
+                color: "#17245B",
                 letterSpacing: "-0.02em",
               }}
             >
@@ -139,32 +139,32 @@ export default async function Home() {
         {/* ── Hero ── */}
         <section className="stagger-children" style={{ marginBottom: "clamp(16px, 4vh, 32px)" }}>
           {/* Heading */}
-          <h1
-            style={{
-              fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
-              fontSize: "clamp(2.2rem, 6.5vh, 3.4rem)",
-              lineHeight: 1.06,
-              letterSpacing: "-0.02em",
-              color: "#1c1917",
-              marginBottom: 14,
-              fontWeight: 400,
-            }}
-          >
-            Never get lost at{" "}
-            <span style={{ color: "oklch(0.32 0.09 155)", fontStyle: "italic" }}>UiTM</span>
-            {" "}again.
-          </h1>
+            <h1
+              style={{
+                fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
+                fontSize: "clamp(2.2rem, 6.5vh, 3.4rem)",
+                lineHeight: 1.06,
+                letterSpacing: "-0.02em",
+                color: "#17245B",
+                marginBottom: 14,
+                fontWeight: 400,
+              }}
+            >
+              Never get lost at{" "}
+              <span style={{ color: "#5B267B", fontStyle: "italic" }}>UiTM</span>
+              {" "}again.
+            </h1>
 
-          <p
-            style={{
-            fontSize: 15,
-            lineHeight: 1.6,
-            color: "#78716c",
-            maxWidth: 400,
-              fontWeight: 300,
-              marginBottom: 0,
-            }}
-          >
+            <p
+              style={{
+              fontSize: 15,
+              lineHeight: 1.6,
+              color: "#4C5370",
+              maxWidth: 400,
+                fontWeight: 300,
+                marginBottom: 0,
+              }}
+            >
             An interactive map of UiTM campus. Search buildings and get
             walking directions in seconds.
           </p>
@@ -186,7 +186,7 @@ export default async function Home() {
               style={{
                 padding: "10px 12px",
                 borderRadius: 12,
-                border: "1px solid #e7e5e4",
+                border: "1px solid #DBE0F1",
                 background: "rgba(255,255,255,0.7)",
               }}
             >
@@ -195,19 +195,19 @@ export default async function Home() {
                   width: 28,
                   height: 28,
                   borderRadius: 7,
-                  background: "oklch(0.32 0.09 155 / 0.1)",
+                  background: "rgba(91,38,123,0.1)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   marginBottom: 6,
                 }}
               >
-                <Icon style={{ width: 14, height: 14, color: "oklch(0.32 0.09 155)" }} />
+                <Icon style={{ width: 14, height: 14, color: "#5B267B" }} />
               </div>
-              <p style={{ fontSize: 12, fontWeight: 600, color: "#292524", marginBottom: 2 }}>
+              <p style={{ fontSize: 12, fontWeight: 600, color: "#17245B", marginBottom: 2 }}>
                 {label}
               </p>
-              <p style={{ fontSize: 11, color: "#a8a29e", lineHeight: 1.4 }}>{detail}</p>
+              <p style={{ fontSize: 11, color: "#6B7399", lineHeight: 1.4 }}>{detail}</p>
             </div>
           ))}
         </div>
@@ -230,7 +230,8 @@ export default async function Home() {
                   width: 40,
                   height: 40,
                   borderRadius: 10,
-                  background: "oklch(0.32 0.09 155)",
+                  background: "#17245B",
+                  borderTop: "2px solid #F5BF32",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -238,7 +239,7 @@ export default async function Home() {
                   fontFamily: "var(--font-dm-serif), Georgia, serif",
                   fontSize: 17,
                   fontWeight: 700,
-                  color: "#fff",
+                  color: "#F5BF32",
                   transition: "transform 0.25s ease",
                 }}
                 className="card-num"
@@ -252,7 +253,7 @@ export default async function Home() {
                   style={{
                     fontSize: 15,
                     fontWeight: 600,
-                    color: "#1c1917",
+                    color: "#17245B",
                     marginBottom: 2,
                     transition: "color 0.2s",
                   }}
@@ -260,7 +261,7 @@ export default async function Home() {
                 >
                   UiTM {campus.name}
                 </p>
-                <p style={{ fontSize: 12, color: "#a8a29e" }}>
+                <p style={{ fontSize: 12, color: "#6B7399" }}>
                   {campus.state}
                   {campus.buildingCount ? ` · ${campus.buildingCount}+ buildings` : ""}
                 </p>
@@ -272,12 +273,12 @@ export default async function Home() {
                   width: 32,
                   height: 32,
                   borderRadius: 8,
-                  background: "oklch(0.32 0.09 155 / 0.08)",
+                  background: "rgba(91,38,123,0.08)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   flexShrink: 0,
-                  color: "oklch(0.32 0.09 155)",
+                  color: "#5B267B",
                   transition: "transform 0.25s ease, background 0.25s ease",
                 }}
                 className="card-arrow"
@@ -299,7 +300,7 @@ export default async function Home() {
             borderTop: "1px solid #e7e5e4",
           }}
         >
-          <p style={{ fontSize: 11, color: "#c4c0bb", letterSpacing: "0.04em" }}>
+          <p style={{ fontSize: 11, color: "#8A96CB", letterSpacing: "0.04em" }}>
             OSM-based · MIT License
           </p>
           <a
@@ -309,7 +310,7 @@ export default async function Home() {
             style={{
               fontSize: 11,
               fontWeight: 500,
-              color: "#a8a29e",
+              color: "#5B267B",
               textDecoration: "none",
               transition: "color 0.2s",
             }}
@@ -346,7 +347,7 @@ export default async function Home() {
           gap: 14px;
           padding: 10px 14px;
           border-radius: 12px;
-          border: 1px solid #e7e5e4;
+          border: 1px solid #DBE0F1;
           background: rgba(255,255,255,0.75);
           text-decoration: none;
           transition:
@@ -357,20 +358,20 @@ export default async function Home() {
           animation: fade-in-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
         }
         .campus-card:hover {
-          border-color: oklch(0.32 0.09 155 / 0.35);
+          border-color: rgba(245, 191, 50, 0.8);
           background: #fff;
           transform: translateY(-2px);
-          box-shadow: 0 8px 24px rgba(30, 82, 53, 0.08), 0 2px 6px rgba(0,0,0,0.04);
+          box-shadow: 0 8px 24px rgba(23, 36, 91, 0.1), 0 2px 6px rgba(0,0,0,0.04);
         }
         .campus-card:hover .card-title {
-          color: oklch(0.32 0.09 155);
+          color: #5B267B;
         }
         .campus-card:hover .card-num {
           transform: scale(1.05);
         }
         .campus-card:hover .card-arrow {
           transform: translateX(2px);
-          background: oklch(0.32 0.09 155 / 0.14) !important;
+          background: rgba(91,38,123,0.14) !important;
         }
 
         @media (max-width: 480px) {
@@ -386,17 +387,17 @@ export default async function Home() {
           gap: 5px;
           font-size: 12px;
           font-weight: 500;
-          color: #78716c;
+          color: #4C5370;
           text-decoration: none;
           padding: 6px 12px;
           border-radius: 8px;
-          border: 1px solid #e7e5e4;
+          border: 1px solid #DBE0F1;
           background: rgba(255,255,255,0.7);
           transition: border-color 0.2s, color 0.2s;
         }
         .github-btn:hover {
-          border-color: oklch(0.32 0.09 155 / 0.4);
-          color: oklch(0.25 0.07 155);
+          border-color: rgba(245, 191, 50, 0.8);
+          color: #17245B;
         }
       `}</style>
     </main>

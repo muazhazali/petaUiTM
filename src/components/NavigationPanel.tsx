@@ -26,7 +26,7 @@ interface FuseResult {
   subtitle: string;
 }
 
-const GREEN = "oklch(0.32 0.09 155)";
+const GREEN = "#17245B";
 
 function formatDuration(seconds: number): string {
   const mins = Math.round(seconds / 60);
@@ -143,16 +143,16 @@ function WaypointInput({
     return (
       <div
         className="flex items-center gap-2 px-3 py-2.5 rounded-xl border"
-        style={{ background: accentBg, borderColor: `${accentColor} / 0.2` }}
+        style={{ background: accentBg, border: `1px solid ${accentColor}33` }}
       >
         <span className="flex-shrink-0" style={{ color: accentColor }}>{icon}</span>
-        <span className="flex-1 text-sm font-medium truncate text-stone-900">{value.name}</span>
+        <span className="flex-1 text-sm font-medium truncate text-[#17245B]">{value.name}</span>
         <button
           onClick={onClear}
           className="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full hover:bg-black/10 transition-colors"
           aria-label="Clear"
         >
-          <X className="h-3 w-3 text-stone-500" aria-hidden="true" />
+          <X className="h-3 w-3 text-[#4C5370]" aria-hidden="true" />
         </button>
       </div>
     );
@@ -160,43 +160,43 @@ function WaypointInput({
 
   return (
     <div ref={containerRef} className="relative">
-      <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-dashed border-stone-200 bg-stone-50 focus-within:border-stone-300 focus-within:bg-white transition-colors">
-        <Search className="h-3.5 w-3.5 flex-shrink-0 text-stone-300" aria-hidden="true" />
+      <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-dashed border-[#DBE0F1] bg-[#F5F7FC] focus-within:border-[#F5BF32] focus-within:bg-white transition-colors">
+        <Search className="h-3.5 w-3.5 flex-shrink-0 text-[#8A96CB]" aria-hidden="true" />
         <input
           ref={inputRef}
           value={query}
           onChange={(e) => handleChange(e.target.value)}
           onFocus={() => setOpen(true)}
           placeholder={placeholder}
-          className="flex-1 text-sm bg-transparent outline-none placeholder:text-stone-400 text-stone-900 min-w-0"
+          className="flex-1 text-sm bg-transparent outline-none placeholder:text-[#8A96CB] text-[#17245B] min-w-0"
         />
         {query && (
           <button onClick={() => { setQuery(""); setResults([]); }} className="flex-shrink-0" aria-label="Clear">
-            <X className="h-3 w-3 text-stone-400" aria-hidden="true" />
+            <X className="h-3 w-3 text-[#6B7399]" aria-hidden="true" />
           </button>
         )}
       </div>
 
       {open && results.length > 0 && (
-        <div
-          className="absolute top-full mt-1.5 left-0 right-0 rounded-xl overflow-hidden z-[60]"
-          style={{
-            background: "rgba(255,255,255,0.97)",
-            border: "1px solid rgba(0,0,0,0.07)",
-            boxShadow: "0 12px 32px rgba(13,43,26,0.12), 0 2px 8px rgba(0,0,0,0.06)",
-          }}
-        >
-          <div className="max-h-48 overflow-y-auto divide-y divide-stone-50">
+          <div
+            className="absolute top-full mt-1.5 left-0 right-0 rounded-xl overflow-hidden z-[60]"
+            style={{
+              background: "rgba(255,255,255,0.97)",
+              border: "1px solid rgba(23,36,91,0.08)",
+              boxShadow: "0 12px 32px rgba(23,36,91,0.12), 0 2px 8px rgba(0,0,0,0.06)",
+            }}
+          >
+          <div className="max-h-48 overflow-y-auto divide-y divide-[#EEF1F9]">
             {results.map((r, i) => (
               <button
                 key={i}
-                className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-stone-50/80"
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-[#F5F7FC]"
                 onMouseDown={(e) => { e.preventDefault(); handleSelect(r.building); }}
               >
-                <MapPin className="h-3.5 w-3.5 flex-shrink-0" style={{ color: GREEN }} aria-hidden="true" />
+                <MapPin className="h-3.5 w-3.5 flex-shrink-0" style={{ color: "#17245B" }} aria-hidden="true" />
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold text-stone-900 truncate">{r.displayName}</p>
-                  <p className="text-[10px] text-stone-400">{r.subtitle}</p>
+                  <p className="text-xs font-semibold text-[#17245B] truncate">{r.displayName}</p>
+                  <p className="text-[10px] text-[#6B7399]">{r.subtitle}</p>
                 </div>
               </button>
             ))}
@@ -233,54 +233,54 @@ export default function NavigationPanel({
 
   return (
     <div
-      className="w-full rounded-2xl overflow-visible"
-      role="region"
-      aria-label="Directions panel"
-      style={{
-        background: "rgba(255,255,255,0.97)",
-        border: "1px solid rgba(0,0,0,0.07)",
-        boxShadow: "0 4px 24px rgba(13,43,26,0.1), 0 1px 4px rgba(0,0,0,0.06)",
-      }}
-    >
-      {/* Header */}
-      <div className="flex items-center gap-2.5 px-4 pt-3 pb-2.5 border-b border-stone-100">
-        <div
-          className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
-          style={{ background: GREEN }}
-        >
-          <Navigation2 className="h-3.5 w-3.5 text-white" aria-hidden="true" />
-        </div>
-        <span className="text-sm font-semibold text-stone-900 flex-1 tracking-tight">Directions</span>
-        {bothSet && routeInfo && (
-          <button
-            onClick={handleShare}
-            aria-label="Copy route link"
-            title="Copy link to this route"
-            className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-stone-100 active:bg-stone-200 transition-colors"
+            className="w-full rounded-2xl overflow-visible"
+            role="region"
+            aria-label="Directions panel"
+            style={{
+              background: "#FFFFFF",
+              border: "1px solid rgba(23,36,91,0.08)",
+              boxShadow: "0 4px 24px rgba(23,36,91,0.1), 0 1px 4px rgba(0,0,0,0.06)",
+            }}
           >
-            {copied ? (
-              <span className="text-[10px] font-semibold" style={{ color: GREEN }}>Copied!</span>
-            ) : (
-              <Share2 className="h-3.5 w-3.5 text-stone-400" aria-hidden="true" />
-            )}
-          </button>
-        )}
-        <button
-          onClick={onClose}
-          aria-label="Close directions"
-          className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-stone-100 active:bg-stone-200 transition-colors"
-        >
-          <X className="h-4 w-4 text-stone-400" aria-hidden="true" />
-        </button>
-      </div>
+            {/* Header */}
+            <div className="flex items-center gap-2.5 px-4 pt-3 pb-2.5 border-b border-[#DBE0F1]">
+              <div
+                className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{ background: "#F5BF32" }}
+              >
+                <Navigation2 className="h-3.5 w-3.5 text-[#17245B]" aria-hidden="true" />
+              </div>
+              <span className="text-sm font-semibold text-[#17245B] flex-1 tracking-tight">Directions</span>
+              {bothSet && routeInfo && (
+                <button
+                  onClick={handleShare}
+                  aria-label="Copy route link"
+                  title="Copy link to this route"
+                  className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-[#F5F7FC] active:bg-[#EEF1F9] transition-colors"
+                >
+                  {copied ? (
+                    <span className="text-[10px] font-semibold" style={{ color: "#5B267B" }}>Copied!</span>
+                  ) : (
+                    <Share2 className="h-3.5 w-3.5 text-[#6B7399]" aria-hidden="true" />
+                  )}
+                </button>
+              )}
+              <button
+                onClick={onClose}
+                aria-label="Close directions"
+                className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-[#F5F7FC] active:bg-[#EEF1F9] transition-colors"
+              >
+                <X className="h-4 w-4 text-[#6B7399]" aria-hidden="true" />
+              </button>
+            </div>
 
       {/* Waypoints */}
       <div className="flex items-stretch gap-0 px-3 py-2.5">
         {/* Dot + line indicator */}
         <div className="flex flex-col items-center w-8 pt-3.5 pb-3.5 gap-0 flex-shrink-0" aria-hidden="true">
-          <div className="w-2.5 h-2.5 rounded-full ring-2 ring-emerald-100 flex-shrink-0 bg-emerald-400" />
-          <div className="flex-1 w-px my-1 min-h-[16px]" style={{ background: "linear-gradient(to bottom, #34d399, #f87171)" }} />
-          <div className="w-2.5 h-2.5 rounded-full ring-2 ring-red-100 flex-shrink-0 bg-red-400" />
+          <div className="w-2.5 h-2.5 rounded-full ring-2 ring-[#FDF4DC] flex-shrink-0 bg-[#F5BF32]" />
+          <div className="flex-1 w-px my-1 min-h-[16px]" style={{ background: "linear-gradient(to bottom, #F5BF32, #5B267B)" }} />
+          <div className="w-2.5 h-2.5 rounded-full ring-2 ring-[#EEE6F6] flex-shrink-0 bg-[#5B267B]" />
         </div>
 
         {/* Input rows */}
@@ -289,8 +289,8 @@ export default function NavigationPanel({
             value={from}
             placeholder="Choose start point…"
             icon={<MapPin className="h-3.5 w-3.5" />}
-            accentColor="#059669"
-            accentBg="rgba(209,250,229,0.5)"
+            accentColor="#17245B"
+            accentBg="rgba(245,191,50,0.12)"
             buildings={buildings}
             onSelect={onSetFrom}
             onClear={onClearFrom}
@@ -299,8 +299,8 @@ export default function NavigationPanel({
             value={to}
             placeholder="Choose destination…"
             icon={<Flag className="h-3.5 w-3.5" />}
-            accentColor="#dc2626"
-            accentBg="rgba(254,226,226,0.5)"
+            accentColor="#5B267B"
+            accentBg="rgba(91,38,123,0.08)"
             buildings={buildings}
             onSelect={onSetTo}
             onClear={onClearTo}
@@ -313,9 +313,9 @@ export default function NavigationPanel({
             onClick={onSwap}
             disabled={!from && !to}
             aria-label="Swap start and destination"
-            className="flex items-center justify-center w-8 h-8 rounded-xl bg-white border border-stone-200 shadow-sm hover:border-stone-300 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            className="flex items-center justify-center w-8 h-8 rounded-xl bg-white border border-[#DBE0F1] shadow-sm hover:border-[#8A96CB] active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           >
-            <ArrowUpDown className="h-3.5 w-3.5 text-stone-400" aria-hidden="true" />
+            <ArrowUpDown className="h-3.5 w-3.5 text-[#6B7399]" aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -325,7 +325,7 @@ export default function NavigationPanel({
         {isLoading ? (
           <div
             className="flex items-center gap-2.5 py-2 px-3 rounded-xl"
-            style={{ background: "oklch(0.32 0.09 155 / 0.06)", border: "1px solid oklch(0.32 0.09 155 / 0.12)" }}
+            style={{ background: "rgba(23,36,91,0.06)", border: "1px solid rgba(23,36,91,0.12)" }}
           >
             <div className="flex gap-1" aria-hidden="true">
               <span className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:0ms]" style={{ background: GREEN }} />
@@ -340,20 +340,20 @@ export default function NavigationPanel({
             <div
               className="flex items-center gap-3 py-2 px-3 rounded-xl"
               style={{
-                background: "oklch(0.32 0.09 155 / 0.06)",
-                border: "1px solid oklch(0.32 0.09 155 / 0.1)",
+                background: "rgba(245,191,50,0.12)",
+                border: "1px solid rgba(245,191,50,0.45)",
               }}
             >
               <div className="flex items-center gap-1.5" style={{ color: GREEN }}>
                 <Clock className="h-3.5 w-3.5" aria-hidden="true" />
                 <span className="text-xs font-semibold">{formatDuration(routeInfo.duration)}</span>
               </div>
-              <div className="w-px h-3.5 bg-stone-200" />
+              <div className="w-px h-3.5 bg-[#DBE0F1]" />
               <div className="flex items-center gap-1.5" style={{ color: GREEN }}>
                 <Ruler className="h-3.5 w-3.5" aria-hidden="true" />
                 <span className="text-xs font-semibold">{formatDistance(routeInfo.distance)}</span>
               </div>
-              <span className="text-xs text-stone-400 ml-auto">Walking</span>
+              <span className="text-xs text-[#6B7399] ml-auto">Walking</span>
             </div>
 
             {/* Steps toggle */}
@@ -372,19 +372,19 @@ export default function NavigationPanel({
             {stepsOpen && (
               <ol className="flex flex-col gap-1 max-h-48 overflow-y-auto pr-1 scrollbar-hide">
                 {routeInfo.steps.map((step, i) => (
-                  <li key={i} className="flex items-start gap-2.5 py-1.5 px-2 rounded-lg even:bg-stone-50">
+                  <li key={i} className="flex items-start gap-2.5 py-1.5 px-2 rounded-lg even:bg-[#F5F7FC]">
                     <span
-                      className="w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5 text-white"
-                      style={{ background: GREEN }}
+                      className="w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5 text-[#17245B]"
+                      style={{ background: "#F5BF32" }}
                     >
                       {i + 1}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <span className="text-xs font-medium text-stone-800">
+                      <span className="text-xs font-medium text-[#17245B]">
                         {formatManeuver(step.maneuver)}
-                        {step.name ? <span className="text-stone-500"> onto <span className="text-stone-700">{step.name}</span></span> : null}
+                        {step.name ? <span className="text-[#6B7399]"> onto <span className="text-[#4C5370]">{step.name}</span></span> : null}
                       </span>
-                      <span className="block text-[10px] text-stone-400 mt-0.5">{formatDistance(step.distance)}</span>
+                      <span className="block text-[10px] text-[#8A96CB] mt-0.5">{formatDistance(step.distance)}</span>
                     </div>
                   </li>
                 ))}
@@ -392,7 +392,7 @@ export default function NavigationPanel({
             )}
           </>
         ) : (
-          <p className="text-xs text-stone-400 py-1 px-1">
+          <p className="text-xs text-[#6B7399] py-1 px-1">
             {!from
               ? "Search for a start point above."
               : !to

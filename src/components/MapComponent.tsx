@@ -5,13 +5,13 @@ import L from "leaflet";
 import { Building, POI, POICategory } from "@/types";
 
 const POI_COLORS: Record<POICategory, string> = {
-  food: "#f59e0b",
-  mosque: "#10b981",
-  atm: "#3b82f6",
-  parking: "#8b5cf6",
-  bus: "#ec4899",
-  health: "#ef4444",
-  library: "#6366f1",
+  food: "#F5BF32",
+  mosque: "#5B267B",
+  atm: "#17245B",
+  parking: "#8547A9",
+  bus: "#C79A14",
+  health: "#B03A2B",
+  library: "#374C9E",
 };
 
 const POI_ICONS: Record<POICategory, string> = {
@@ -39,8 +39,8 @@ interface MapComponentProps {
   activeCategories?: Set<POICategory>;
 }
 
-const SELECTED_STYLE = { color: "#4f46e5", weight: 2.5, fillColor: "#6366f1", fillOpacity: 0.7 };
-const DEFAULT_STYLE = { color: "#6366f1", weight: 2, fillColor: "#818cf8", fillOpacity: 0.45 };
+const SELECTED_STYLE = { color: "#17245B", weight: 2.5, fillColor: "#5B267B", fillOpacity: 0.7 };
+const DEFAULT_STYLE = { color: "#374C9E", weight: 2, fillColor: "#8A96CB", fillOpacity: 0.45 };
 
 export default function MapComponent({
   campus,
@@ -57,6 +57,7 @@ export default function MapComponent({
   const containerRef = useRef<HTMLDivElement>(null);
   const buildingsLayerRef = useRef<L.GeoJSON | null>(null);
   const routeLayerRef = useRef<L.GeoJSON | null>(null);
+  const routeCoreRef = useRef<L.GeoJSON | null>(null);
   const fromMarkerRef = useRef<L.Marker | null>(null);
   const toMarkerRef = useRef<L.Marker | null>(null);
   const locateMarkerRef = useRef<L.CircleMarker | null>(null);
@@ -115,7 +116,7 @@ export default function MapComponent({
         radius: 8,
         color: "#ffffff",
         weight: 3,
-        fillColor: "#2f7d53",
+        fillColor: "#17245B",
         fillOpacity: 1,
       })
         .addTo(map)
@@ -137,7 +138,7 @@ export default function MapComponent({
     const styleFor = (id: string | undefined, hovered: boolean) => {
       const base = id === selectedIdRef.current ? SELECTED_STYLE : DEFAULT_STYLE;
       return hovered
-        ? { ...base, fillColor: id === selectedIdRef.current ? SELECTED_STYLE.fillColor : "#818cf8", fillOpacity: 0.7 }
+        ? { ...base, fillColor: id === selectedIdRef.current ? SELECTED_STYLE.fillColor : "#AF8ACF", fillOpacity: 0.7 }
         : base;
     };
 
@@ -166,18 +167,29 @@ export default function MapComponent({
     buildingsLayerRef.current = buildingsLayer;
 
     // Route layer (non-interactive so clicks pass through)
+    // Purple casing under a yellow core, matching the UiTM accent pair
     const routeLayer = L.geoJSON(
       { type: "FeatureCollection", features: [] } as GeoJSON.FeatureCollection,
       {
-        style: { color: "#6366f1", weight: 5, opacity: 0.9 },
+        style: { color: "#5B267B", weight: 7, opacity: 0.95 },
         interactive: false,
       }
     ).addTo(map);
+    const routeCore = L.geoJSON(
+      { type: "FeatureCollection", features: [] } as GeoJSON.FeatureCollection,
+      {
+        style: { color: "#F5BF32", weight: 4.5, opacity: 1 },
+        interactive: false,
+      }
+    ).addTo(map);
+    routeCore.bringToBack();
+    routeLayer.bringToBack();
+    routeCoreRef.current = routeCore;
     routeLayerRef.current = routeLayer;
 
     // Building pill markers
     buildings.forEach((b) => {
-      const pillHtml = `<div class="marker-pill" data-building-id="${b.id}" style="padding:3px 8px;border-radius:999px;font-size:10px;font-weight:700;color:white;background:oklch(0.32 0.09 155);border:1.5px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.25);white-space:nowrap;user-select:none;cursor:pointer;transition:background 0.15s">${b.shortName}</div>`;
+      const pillHtml = `<div class="marker-pill" data-building-id="${b.id}" style="padding:3px 8px;border-radius:999px;font-size:10px;font-weight:700;color:white;background:#17245B;border:1.5px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.25);white-space:nowrap;user-select:none;cursor:pointer;transition:background 0.15s">${b.shortName}</div>`;
 
       const marker = L.marker([b.coords[0], b.coords[1]], {
         icon: L.divIcon({ className: "marker-pill-wrapper", html: pillHtml }),
@@ -203,6 +215,7 @@ export default function MapComponent({
       mapRef.current = null;
       buildingsLayerRef.current = null;
       routeLayerRef.current = null;
+      routeCoreRef.current = null;
       fromMarkerRef.current = null;
       toMarkerRef.current = null;
       locateMarkerRef.current = null;
@@ -230,9 +243,17 @@ export default function MapComponent({
   // Update route when routeGeoJSON changes
   useEffect(() => {
     const layer = routeLayerRef.current;
-    if (!layer) return;
+    const core = routeCoreRef.current;
+    if (!layer || !core) return;
     layer.clearLayers();
-    if (routeGeoJSON) layer.addData(routeGeoJSON);
+    core.clearLayers();
+    if (routeGeoJSON) {
+      layer.addData(routeGeoJSON);
+      core.addData(routeGeoJSON);
+      // keep purple casing below yellow core, both below buildings
+      core.eachLayer((sub) => (sub as L.Polyline).bringToBack());
+      layer.eachLayer((sub) => (sub as L.Polyline).bringToBack());
+    }
   }, [routeGeoJSON]);
 
   // Pan to selected building
@@ -252,11 +273,11 @@ export default function MapComponent({
       const pill = marker.getElement()?.querySelector<HTMLElement>(".marker-pill");
       if (!pill) return;
       if (pill.dataset.buildingId === selectedBuilding?.id) {
-        pill.style.background = "#6366f1";
-        pill.style.boxShadow = "0 2px 10px rgba(99,102,241,0.5)";
+        pill.style.background = "#5B267B";
+        pill.style.boxShadow = "0 2px 10px rgba(91,38,123,0.5)";
         (pill.parentElement ?? pill).style.zIndex = "1000";
       } else {
-        pill.style.background = "oklch(0.32 0.09 155)";
+        pill.style.background = "#17245B";
         pill.style.boxShadow = "0 2px 6px rgba(0,0,0,0.25)";
         (pill.parentElement ?? pill).style.zIndex = "1";
       }
@@ -275,7 +296,7 @@ export default function MapComponent({
         {
           icon: L.divIcon({
             className: "marker-dot-wrapper",
-            html: '<div class="w-5 h-5 rounded-full bg-emerald-500 border-[3px] border-white shadow-lg shadow-emerald-500/40"></div>',
+            html: '<div class="w-5 h-5 rounded-full bg-[#F5BF32] border-[3px] border-[#17245B] shadow-lg"></div>',
             iconSize: [20, 20],
             iconAnchor: [10, 10],
           }),
@@ -303,7 +324,7 @@ export default function MapComponent({
         {
           icon: L.divIcon({
             className: "marker-dot-wrapper",
-            html: '<div class="w-5 h-5 rounded-full bg-rose-500 border-[3px] border-white shadow-lg shadow-rose-500/40"></div>',
+            html: '<div class="w-5 h-5 rounded-full bg-[#5B267B] border-[3px] border-white shadow-lg"></div>',
             iconSize: [20, 20],
             iconAnchor: [10, 10],
           }),
@@ -335,7 +356,7 @@ export default function MapComponent({
       const marker = L.marker([poi.coords[0], poi.coords[1]], {
         icon: L.divIcon({
           className: "marker-poi-wrapper",
-          html: `<div title="${poi.name}" style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:999px;border:2px solid white;box-shadow:0 4px 10px rgba(0,0,0,0.2);font-size:16px;cursor:pointer;user-select:none;background:${POI_COLORS[poi.category] ?? "#6366f1"}">${POI_ICONS[poi.category] ?? "📍"}</div>`,
+          html: `<div title="${poi.name}" style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:999px;border:2px solid white;box-shadow:0 4px 10px rgba(0,0,0,0.2);font-size:16px;cursor:pointer;user-select:none;background:${POI_COLORS[poi.category] ?? "#374C9E"}">${POI_ICONS[poi.category] ?? "📍"}</div>`,
           iconSize: [32, 32],
           iconAnchor: [16, 16],
         }),

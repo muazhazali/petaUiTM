@@ -181,7 +181,7 @@ export default function FloorPlanViewer({
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="flex flex-col items-center gap-2">
-              <div className="w-6 h-6 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
+              <div className="w-6 h-6 rounded-full border-2 border-[#5B267B] border-t-transparent animate-spin" />
               <p className="text-xs text-gray-400">Loading floor plan…</p>
             </div>
           </div>
@@ -244,18 +244,18 @@ export default function FloorPlanViewer({
       {/* Room info tooltip */}
       {selectedRoom && (
         <div
-          className="mt-2 flex items-start gap-2.5 p-3 rounded-xl bg-indigo-50 border border-indigo-100 animate-fade-in"
+          className="mt-2 flex items-start gap-2.5 p-3 rounded-xl bg-[#EEE6F6] border border-[#C4A9DD] animate-fade-in"
           role="status"
           aria-live="polite"
         >
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-indigo-900 truncate">{selectedRoom.name}</p>
+            <p className="text-sm font-semibold text-[#3F1860] truncate">{selectedRoom.name}</p>
             <div className="flex items-center gap-3 mt-1">
-              <span className="flex items-center gap-1 text-xs text-indigo-600">
+              <span className="flex items-center gap-1 text-xs text-[#5B267B]">
                 <Tag className="h-3 w-3" aria-hidden="true" />
                 <span className="capitalize">{selectedRoom.type.replace("_", " ")}</span>
               </span>
-              <span className="flex items-center gap-1 text-xs text-indigo-600">
+              <span className="flex items-center gap-1 text-xs text-[#5B267B]">
                 <Users className="h-3 w-3" aria-hidden="true" />
                 {selectedRoom.capacity}
               </span>
@@ -264,9 +264,9 @@ export default function FloorPlanViewer({
           <button
             onClick={dismissRoom}
             aria-label="Dismiss room info"
-            className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-indigo-100 active:bg-indigo-200 transition-colors flex-shrink-0"
+            className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-[#DCCBEB] active:bg-[#C4A9DD] transition-colors flex-shrink-0"
           >
-            <X className="h-3.5 w-3.5 text-indigo-500" aria-hidden="true" />
+            <X className="h-3.5 w-3.5 text-[#5B267B]" aria-hidden="true" />
           </button>
         </div>
       )}

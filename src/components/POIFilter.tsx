@@ -17,7 +17,7 @@ interface POIFilterProps {
   onChange: (categories: Set<POICategory>) => void;
 }
 
-const GREEN = "oklch(0.32 0.09 155)";
+const GREEN = "#17245B";
 
 export default function POIFilter({ activeCategories, onChange }: POIFilterProps) {
   function toggle(cat: POICategory) {
@@ -51,13 +51,13 @@ export default function POIFilter({ activeCategories, onChange }: POIFilterProps
                     background: GREEN,
                     color: "white",
                     border: `1px solid ${GREEN}`,
-                    boxShadow: "0 2px 8px oklch(0.32 0.09 155 / 0.3)",
+                    boxShadow: "0 2px 8px rgba(91,38,123,0.25)",
                   }
                 : {
                     background: "rgba(255,255,255,0.92)",
-                    border: "1px solid rgba(0,0,0,0.08)",
-                    color: "#57534e",
-                    boxShadow: "0 1px 4px rgba(13,43,26,0.06)",
+                    border: "1px solid rgba(23,36,91,0.1)",
+                    color: "#4C5370",
+                    boxShadow: "0 1px 4px rgba(23,36,91,0.06)",
                   }
             }
           >

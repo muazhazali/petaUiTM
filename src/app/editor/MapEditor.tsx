@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import "./editor.css";
 import { useEffect, useRef, useState, useCallback } from "react";
@@ -10,7 +10,7 @@ import {
   MapPin, Edit3, Undo2, Redo2, Check, X, Pencil, MousePointer2, HelpCircle,
 } from "lucide-react";
 
-// ─── helpers ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function openRing(pts: [number, number][]): [number, number][] {
   if (pts.length < 2) return pts;
@@ -47,12 +47,12 @@ function newBuilding(campus: string): Building {
     polygon: [],
     floors: 1,
     facilities: [],
-    hours: "8:00–17:00",
+    hours: "8:00â€“17:00",
     description: "",
   };
 }
 
-// ─── component ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 type EditorMode = "select" | "draw" | "edit";
 
@@ -98,7 +98,7 @@ export default function MapEditor() {
   useEffect(() => { selIdRef.current = selectedId; }, [selectedId]);
   useEffect(() => { buildingsRef.current = buildings; }, [buildings]);
 
-  // ── undo ─────────────────────────────────────────────────────────────────
+  // â”€â”€ undo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const snap = (bs: Building[]) => bs.map((b) => ({ ...b, polygon: [...b.polygon] }));
 
@@ -120,13 +120,13 @@ export default function MapEditor() {
     setBuildings(s); setCanUndo(true); setCanRedo(redoRef.current.length > 0);
   }, []);
 
-  // ── toast ─────────────────────────────────────────────────────────────────
+  // â”€â”€ toast â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const showToast = (msg: string, ms = 2500) => {
     setToast(msg); setTimeout(() => setToast(null), ms);
   };
 
-  // ── update buildings with undo ─────────────────────────────────────────────
+  // â”€â”€ update buildings with undo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const updBuildings = useCallback((fn: (p: Building[]) => Building[], withUndo = true) => {
     setBuildings((prev) => { if (withUndo) pushUndo(prev); return fn(prev); });
@@ -143,13 +143,13 @@ export default function MapEditor() {
     }));
   }, []);
 
-  // ── refresh map ────────────────────────────────────────────────────────────
+  // â”€â”€ refresh map â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   //
   // Two paths:
   //  - refreshMap(): full rebuild of overlays (mode/selection change, vertex
-  //    add/remove). Never called while a vertex drag is in progress — if one
+  //    add/remove). Never called while a vertex drag is in progress â€” if one
   //    is, it defers to after dragend.
-  //  - syncDuringDrag(): lightweight — updates ring line, midpoint dot
+  //  - syncDuringDrag(): lightweight â€” updates ring line, midpoint dot
   //    positions, building polygon fill, and draw preview via setLatLngs
   //    only. Called on every building change; safe mid-drag because it
   //    never touches the dragged marker's DOM.
@@ -192,7 +192,7 @@ export default function MapEditor() {
     const ring = currentRing();
     ringLayerRef.current?.setLatLngs(ring.length >= 2 ? (closedRing(ring) as L.LatLngExpression[]) : []);
 
-    // midpoint dots follow (positions only — markers are not recreated)
+    // midpoint dots follow (positions only â€” markers are not recreated)
     const open = openRing(ring);
     midpointMarkersRef.current.forEach((m, i) => {
       if (i < open.length) {
@@ -214,7 +214,7 @@ export default function MapEditor() {
     const map = mapRef.current;
     if (!map || !mapLoaded) return;
 
-    // never tear down overlays mid-drag — defer until dragend
+    // never tear down overlays mid-drag â€” defer until dragend
     if (draggingRef.current !== null) {
       refreshPendingRef.current = true;
       return;
@@ -264,7 +264,7 @@ export default function MapEditor() {
         m.on("drag", (e) => {
           const p = (e.target as L.Marker).getLatLng();
           onDragVertex(i, [p.lng, p.lat]);
-          syncDuringDrag(); // light path — rings/dots/polyline only
+          syncDuringDrag(); // light path â€” rings/dots/polyline only
         });
         m.on("dragend", () => {
           draggingRef.current = null;
@@ -299,7 +299,7 @@ export default function MapEditor() {
         const [lng, lat] = midpoint(p, open[next]);
         const m = L.circleMarker([lat, lng], {
           radius: 4,
-          color: "#f59e0b",
+          color: "#C79A14",
           weight: 1.5,
           fillColor: "#ffffff",
           fillOpacity: 0.55,
@@ -337,13 +337,13 @@ export default function MapEditor() {
   }, [mapLoaded, updBuildings, vertexIcon, onDragVertex, pushUndo, syncDuringDrag, currentRing]);
 
   useEffect(() => { refreshMapRef.current = refreshMap; }, [refreshMap]);
-  // ── load data ──────────────────────────────────────────────────────────────
+  // â”€â”€ load data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   useEffect(() => {
     fetch("/data/buildings.json").then((r) => r.json()).then(setBuildings).catch(() => setBuildings([]));
   }, []);
 
-  // ── init map ───────────────────────────────────────────────────────────────
+  // â”€â”€ init map â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -361,9 +361,9 @@ export default function MapEditor() {
 
     const buildingsLayer = L.geoJSON({ type: "FeatureCollection", features: [] } as GeoJSON.FeatureCollection, {
       style: (feature) => {
-        if (feature?.properties?.editing) return { color: "#f59e0b", weight: 1.5, fillColor: "#f59e0b", fillOpacity: 0.25 };
-        if (feature?.properties?.selected) return { color: "#4f46e5", weight: 2.5, fillColor: "#6366f1", fillOpacity: 0.38 };
-        return { color: "#6366f1", weight: 1.5, fillColor: "#818cf8", fillOpacity: 0.38 };
+        if (feature?.properties?.editmode) return { color: "#C79A14", weight: 1.5, fillColor: "#F5BF32", fillOpacity: 0.25 };
+        if (feature?.properties?.selected) return { color: "#17245B", weight: 2.5, fillColor: "#5B267B", fillOpacity: 0.38 };
+        return { color: "#374C9E", weight: 1.5, fillColor: "#8A96CB", fillOpacity: 0.38 };
       },
       onEachFeature: (feature, lyr) => {
         lyr.on("click", (e) => {
@@ -393,15 +393,15 @@ export default function MapEditor() {
 
     // draw preview layers
     previewFillRef.current = L.polygon([], {
-      color: "#f59e0b",
+      color: "#C79A14",
       weight: 1,
-      fillColor: "#f59e0b",
+      fillColor: "#C79A14",
       fillOpacity: 0.12,
       interactive: false,
     }).addTo(map);
 
     previewLineRef.current = L.polyline([], {
-      color: "#f59e0b",
+      color: "#C79A14",
       weight: 2,
       dashArray: "5 3",
       interactive: false,
@@ -409,7 +409,7 @@ export default function MapEditor() {
 
     // edit ring
     ringLayerRef.current = L.polyline([], {
-      color: "#f59e0b",
+      color: "#C79A14",
       weight: 1.5,
       dashArray: "4 2",
       interactive: false,
@@ -444,7 +444,7 @@ export default function MapEditor() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── keyboard ───────────────────────────────────────────────────────────────
+  // â”€â”€ keyboard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -460,7 +460,7 @@ export default function MapEditor() {
     return () => window.removeEventListener("keydown", onKey);
   }, [undo, redo]);
 
-  // ── sync buildings → map ───────────────────────────────────────────────────
+  // â”€â”€ sync buildings â†’ map â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   useEffect(() => {
     if (!mapLoaded) return;
@@ -473,7 +473,7 @@ export default function MapEditor() {
     }
   }, [buildings, selectedId, mode, mapLoaded, refreshMap, syncDuringDrag]);
 
-  // ── editor actions ─────────────────────────────────────────────────────────
+  // â”€â”€ editor actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const exitEdit = useCallback(() => {
     setMode("select"); modeRef.current = "select";
@@ -506,7 +506,7 @@ export default function MapEditor() {
     drawPtsRef.current = b ? openRing([...b.polygon]) : [];
     setMode("draw"); modeRef.current = "draw";
     refreshMap();
-    showToast("Click to place vertices — Enter / Esc to finish");
+    showToast("Click to place vertices â€” Enter / Esc to finish");
   }, [refreshMap]);
 
   const startEdit = useCallback((id: string) => {
@@ -567,14 +567,14 @@ export default function MapEditor() {
     showToast("Copied to clipboard");
   };
 
-  // ── render ─────────────────────────────────────────────────────────────────
+  // â”€â”€ render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const selected = buildings.find((b) => b.id === selectedId);
 
   return (
     <div className="editor-shell">
 
-      {/* ══ sidebar ══ */}
+      {/* â•â• sidebar â•â• */}
       <aside className="editor-sidebar">
 
         <div className="editor-sidebar-header">
@@ -586,7 +586,7 @@ export default function MapEditor() {
             <button className="editor-help-btn" onClick={() => setShowGuide(true)}>
               <HelpCircle size={12} /> Guide
             </button>
-            <Link href="/" className="editor-exit-link">← Exit</Link>
+            <Link href="/" className="editor-exit-link">â† Exit</Link>
           </div>
         </div>
 
@@ -626,7 +626,7 @@ export default function MapEditor() {
 
                   <div className="editor-building-info">
                     <div className={`editor-building-name${isSel ? " sel" : ""}`}>{b.name}</div>
-                    <div className="editor-building-meta">{b.shortName} · {openRing(b.polygon).length} pts</div>
+                    <div className="editor-building-meta">{b.shortName} Â· {openRing(b.polygon).length} pts</div>
                   </div>
 
                   {isDraw && <span className="editor-mode-badge draw">DRAW</span>}
@@ -706,9 +706,9 @@ export default function MapEditor() {
 
         <div className="editor-footer">
           <div className="editor-hints">
-            <div><span>Pencil</span> → click to place vertices, <kbd>Enter</kbd>/<kbd>Esc</kbd> finish</div>
-            <div><span>Edit</span> → drag to move · click <span style={{ color: "var(--e-rose)" }}>red vertex</span> to delete · click edge dot to insert</div>
-            <div><span>Dbl-click</span> building for quick edit · <kbd>Ctrl+Z</kbd> undo</div>
+            <div><span>Pencil</span> â†’ click to place vertices, <kbd>Enter</kbd>/<kbd>Esc</kbd> finish</div>
+            <div><span>Edit</span> â†’ drag to move Â· click <span style={{ color: "var(--e-rose)" }}>red vertex</span> to delete Â· click edge dot to insert</div>
+            <div><span>Dbl-click</span> building for quick edit Â· <kbd>Ctrl+Z</kbd> undo</div>
           </div>
           <div className="editor-footer-btns">
             <button className="editor-btn-download" onClick={downloadJSON}><Download size={12} /> Download JSON</button>
@@ -717,7 +717,7 @@ export default function MapEditor() {
         </div>
       </aside>
 
-      {/* ══ map ══ */}
+      {/* â•â• map â•â• */}
       <div className="editor-map-area">
         <div ref={containerRef} className="editor-map-container" />
 
@@ -727,7 +727,7 @@ export default function MapEditor() {
           {mode === "draw"   && <Pencil size={12} />}
           {mode === "edit"   && <Edit3 size={12} />}
           {{ select: "Select", draw: "Draw", edit: "Edit Vertices" }[mode]}
-          {selected && mode !== "select" && <span style={{ opacity: 0.6 }}>— {selected.shortName}</span>}
+          {selected && mode !== "select" && <span style={{ opacity: 0.6 }}>â€” {selected.shortName}</span>}
           {mode !== "select" && (
             <button onClick={mode === "draw" ? commitDraw : exitEdit} title="Finish / exit">
               {mode === "draw" ? <Check size={11} /> : <X size={11} />}
@@ -740,9 +740,9 @@ export default function MapEditor() {
           <div className="editor-hint-bar">
             <span className="hl-amber">Drawing polygon</span>
             <span>click to add vertices</span>
-            <span className="dot">·</span>
+            <span className="dot">Â·</span>
             <kbd>Enter</kbd> <span>finish</span>
-            <span className="dot">·</span>
+            <span className="dot">Â·</span>
             <kbd>Esc</kbd> <span>cancel</span>
           </div>
         )}
@@ -750,9 +750,9 @@ export default function MapEditor() {
           <div className="editor-hint-bar">
             <span className="hl-indigo">Editing vertices</span>
             <span>drag to move</span>
-            <span className="dot">·</span>
+            <span className="dot">Â·</span>
             <span>click vertex to delete</span>
-            <span className="dot">·</span>
+            <span className="dot">Â·</span>
             <span>click <span className="hl-white">ring dot</span> to insert</span>
           </div>
         )}
@@ -770,15 +770,15 @@ export default function MapEditor() {
             <span className="name">{selected.shortName}</span>
             <span style={{ color: "var(--e-text3)" }}>{selected.name}</span>
             <span className="meta">{openRing(selected.polygon).length} vertices</span>
-            <button className="edit-btn" onClick={() => startEdit(selected.id)}>Edit vertices →</button>
-            <button className="draw-btn" onClick={() => startDraw(selected.id)}>Redraw →</button>
+            <button className="edit-btn" onClick={() => startEdit(selected.id)}>Edit vertices â†’</button>
+            <button className="draw-btn" onClick={() => startDraw(selected.id)}>Redraw â†’</button>
           </div>
         )}
       </div>
 
       {toast && <div className="editor-toast">{toast}</div>}
 
-      {/* ══ guide overlay ══ */}
+      {/* â•â• guide overlay â•â• */}
       {showGuide && (
         <div className="editor-guide-backdrop" onClick={() => setShowGuide(false)}>
           <div className="editor-guide-panel" onClick={(e) => e.stopPropagation()}>
@@ -804,28 +804,28 @@ export default function MapEditor() {
                     <div className="editor-guide-step-num">2</div>
                     <div className="editor-guide-step-body">
                       <strong>Edit its vertices <span className="editor-guide-tag indigo">Edit mode</span></strong>
-                      <p>Click <em>&quot;Edit vertices →&quot;</em> in the bottom pill, or <strong>double-click</strong> the building. Yellow dots appear on each vertex — drag them to reshape. Small ring dots on each edge midpoint can be clicked to insert a new vertex. Click a vertex to delete it (min 3 remain).</p>
+                      <p>Click <em>&quot;Edit vertices â†’&quot;</em> in the bottom pill, or <strong>double-click</strong> the building. Yellow dots appear on each vertex â€” drag them to reshape. Small ring dots on each edge midpoint can be clicked to insert a new vertex. Click a vertex to delete it (min 3 remain).</p>
                     </div>
                   </div>
                   <div className="editor-guide-step">
                     <div className="editor-guide-step-num">3</div>
                     <div className="editor-guide-step-body">
                       <strong>Redraw from scratch <span className="editor-guide-tag amber">Draw mode</span></strong>
-                      <p>Click <em>&quot;Redraw →&quot;</em> or the pencil icon. Click on the map to place vertices one by one — a live preview shows the polygon forming. Press <span className="editor-guide-kbd">Enter</span> or <span className="editor-guide-kbd">Esc</span> when done. It automatically switches to Edit mode so you can refine.</p>
+                      <p>Click <em>&quot;Redraw â†’&quot;</em> or the pencil icon. Click on the map to place vertices one by one â€” a live preview shows the polygon forming. Press <span className="editor-guide-kbd">Enter</span> or <span className="editor-guide-kbd">Esc</span> when done. It automatically switches to Edit mode so you can refine.</p>
                     </div>
                   </div>
                   <div className="editor-guide-step">
                     <div className="editor-guide-step-num">4</div>
                     <div className="editor-guide-step-body">
                       <strong>Edit building details</strong>
-                      <p>Click the <strong>▶ chevron</strong> next to any building in the sidebar to expand it. Edit Name, Short Name, Floors, Hours, and Description. Changes save automatically when you click away.</p>
+                      <p>Click the <strong>â–¶ chevron</strong> next to any building in the sidebar to expand it. Edit Name, Short Name, Floors, Hours, and Description. Changes save automatically when you click away.</p>
                     </div>
                   </div>
                   <div className="editor-guide-step">
                     <div className="editor-guide-step-num">5</div>
                     <div className="editor-guide-step-body">
                       <strong>Add a new building</strong>
-                      <p>Click <strong>+ New Building</strong> in the toolbar. It immediately enters Draw mode — click the map to define the polygon, then press <span className="editor-guide-kbd">Enter</span> to finish. Fill in details by expanding the building row.</p>
+                      <p>Click <strong>+ New Building</strong> in the toolbar. It immediately enters Draw mode â€” click the map to define the polygon, then press <span className="editor-guide-kbd">Enter</span> to finish. Fill in details by expanding the building row.</p>
                     </div>
                   </div>
                   <div className="editor-guide-step">
@@ -842,7 +842,7 @@ export default function MapEditor() {
 
               {/* edit mode detail */}
               <div className="editor-guide-section">
-                <h3>Edit mode — vertex interactions</h3>
+                <h3>Edit mode â€” vertex interactions</h3>
                 <div className="editor-guide-steps">
                   <div className="editor-guide-step">
                     <div className="editor-guide-step-body">
@@ -853,7 +853,7 @@ export default function MapEditor() {
                   <div className="editor-guide-step">
                     <div className="editor-guide-step-body">
                       <strong>Delete a vertex</strong>
-                      <p>Click a vertex to delete it. Minimum 3 vertices — a polygon cannot have fewer.</p>
+                      <p>Click a vertex to delete it. Minimum 3 vertices â€” a polygon cannot have fewer.</p>
                     </div>
                   </div>
                   <div className="editor-guide-step">

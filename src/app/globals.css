@@ -50,90 +50,107 @@
 }
 
 :root {
-  /* Forest green + warm cream palette */
-  --green-900: #0d2b1a;
-  --green-800: #163d27;
-  --green-700: #1e5235;
-  --green-600: #276744;
-  --green-500: #2f7d53;
-  --green-400: #4a9e70;
-  --green-300: #72bf94;
-  --green-200: #a8d9bc;
-  --green-100: #d6edde;
-  --green-50: #eef7f1;
+  /* UiTM corporate palette: Prussian blue, vivid violet, royal yellow */
+  --uitm-blue: #17245B;
+  --uitm-purple: #5B267B;
+  --uitm-yellow: #F5BF32;
+  --uitm-bg: #F5F7FC;
 
-  --cream-100: #fdf8f0;
-  --cream-200: #f7edd8;
-  --cream-300: #edd9b8;
-  --sand-400: #c9a96e;
-  --sand-500: #b8913f;
+  --blue-900: #101B47;
+  --blue-800: #17245B;
+  --blue-700: #1F2F73;
+  --blue-600: #293D8B;
+  --blue-500: #374C9E;
+  --blue-400: #5A6BB5;
+  --blue-300: #8A96CB;
+  --blue-200: #B8C0E0;
+  --blue-100: #DBE0F1;
+  --blue-50: #EEF1F9;
 
-  --background: oklch(0.99 0.005 95);
-  --foreground: oklch(0.15 0.03 150);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0.03 150);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0.03 150);
-  --primary: oklch(0.32 0.09 155);
-  --primary-foreground: oklch(0.98 0 0);
-  --secondary: oklch(0.95 0.015 90);
-  --secondary-foreground: oklch(0.32 0.06 150);
-  --muted: oklch(0.96 0.008 100);
-  --muted-foreground: oklch(0.52 0.02 150);
-  --accent: oklch(0.94 0.03 90);
-  --accent-foreground: oklch(0.25 0.07 150);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.91 0.01 100);
-  --input: oklch(0.91 0.01 100);
-  --ring: oklch(0.32 0.09 155);
-  --chart-1: oklch(0.32 0.09 155);
-  --chart-2: oklch(0.65 0.18 60);
-  --chart-3: oklch(0.55 0.15 180);
-  --chart-4: oklch(0.65 0.18 140);
-  --chart-5: oklch(0.7 0.15 60);
+  --purple-900: #3F1860;
+  --purple-800: #5B267B;
+  --purple-700: #703394;
+  --purple-600: #8547A9;
+  --purple-500: #9A63BD;
+  --purple-400: #AF8ACF;
+  --purple-300: #C4A9DD;
+  --purple-200: #DCCBEB;
+  --purple-100: #EEE6F6;
+  --purple-50: #F7F2FB;
+
+  --yellow-600: #C79A14;
+  --yellow-500: #F5BF32;
+  --yellow-400: #F8CE5E;
+  --yellow-300: #FADC8F;
+  --yellow-200: #FBE9BF;
+  --yellow-100: #FDF4DC;
+
+  --background: #F5F7FC;
+  --foreground: #17245B;
+  --card: #FFFFFF;
+  --card-foreground: #17245B;
+  --popover: #FFFFFF;
+  --popover-foreground: #17245B;
+  --primary: #17245B;
+  --primary-foreground: #FFFFFF;
+  --secondary: #5B267B;
+  --secondary-foreground: #FFFFFF;
+  --muted: #EEF1F9;
+  --muted-foreground: #4C5370;
+  --accent: #F5BF32;
+  --accent-foreground: #17245B;
+  --destructive: #C03A2B;
+  --border: #DBE0F1;
+  --input: #DBE0F1;
+  --ring: #17245B;
+  --chart-1: #17245B;
+  --chart-2: #5B267B;
+  --chart-3: #F5BF32;
+  --chart-4: #8547A9;
+  --chart-5: #5A6BB5;
   --radius: 0.625rem;
-  --sidebar: oklch(0.99 0.005 95);
-  --sidebar-foreground: oklch(0.15 0.03 150);
-  --sidebar-primary: oklch(0.32 0.09 155);
-  --sidebar-primary-foreground: oklch(0.98 0 0);
-  --sidebar-accent: oklch(0.95 0.015 90);
-  --sidebar-accent-foreground: oklch(0.25 0.07 150);
-  --sidebar-border: oklch(0.91 0.01 100);
-  --sidebar-ring: oklch(0.52 0.02 150);
+  --sidebar: #F5F7FC;
+  --sidebar-foreground: #17245B;
+  --sidebar-primary: #17245B;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #EEF1F9;
+  --sidebar-accent-foreground: #17245B;
+  --sidebar-border: #DBE0F1;
+  --sidebar-ring: #5B267B;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
+  --background: oklch(0.145 0.02 280);
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
+  --card: oklch(0.205 0.02 280);
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
+  --popover: oklch(0.205 0.02 280);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.72 0.12 155);
-  --primary-foreground: oklch(0.12 0.05 155);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --primary: #F5BF32;
+  --primary-foreground: #17245B;
+  --secondary: #C4A9DD;
+  --secondary-foreground: #3F1860;
+  --muted: oklch(0.269 0.02 280);
+  --muted-foreground: oklch(0.708 0.02 280);
+  --accent: #F5BF32;
+  --accent-foreground: #17245B;
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.72 0.12 155);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
+  --ring: #F5BF32;
+  --chart-1: #F5BF32;
+  --chart-2: #C4A9DD;
+  --chart-3: #8A96CB;
+  --chart-4: #8547A9;
+  --chart-5: #5A6BB5;
+  --sidebar: oklch(0.205 0.02 280);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.72 0.12 155);
-  --sidebar-primary-foreground: oklch(0.12 0.05 155);
-  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-primary: #F5BF32;
+  --sidebar-primary-foreground: #17245B;
+  --sidebar-accent: oklch(0.269 0.02 280);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-ring: #F5BF32;
 }
 
 @layer base {
@@ -158,10 +175,10 @@
 }
 
 .glass-dark {
-  background: rgba(13, 43, 26, 0.85);
+  background: rgba(23, 36, 91, 0.85);
   backdrop-filter: blur(20px) saturate(160%);
   -webkit-backdrop-filter: blur(20px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(245, 191, 50, 0.18);
 }
 
 /* Panel card style for map overlays */
@@ -169,8 +186,8 @@
   background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(24px) saturate(200%);
   -webkit-backdrop-filter: blur(24px) saturate(200%);
-  border: 1px solid rgba(0, 0, 0, 0.07);
-  box-shadow: 0 4px 24px rgba(13, 43, 26, 0.1), 0 1px 4px rgba(0,0,0,0.06);
+  border: 1px solid rgba(23, 36, 91, 0.08);
+  box-shadow: 0 4px 24px rgba(23, 36, 91, 0.1), 0 1px 4px rgba(0,0,0,0.06);
 }
 
 /* Animations */
@@ -261,19 +278,19 @@
 /* Subtle grid pattern for landing */
 .bg-grid-pattern {
   background-image:
-    linear-gradient(rgba(30, 82, 53, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(30, 82, 53, 0.04) 1px, transparent 1px);
+    linear-gradient(rgba(23, 36, 91, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(23, 36, 91, 0.04) 1px, transparent 1px);
   background-size: 40px 40px;
 }
 
-/* Green dot accent */
+/* Yellow dot accent */
 .dot-accent::before {
   content: '';
   display: inline-block;
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: oklch(0.32 0.09 155);
+  background: #F5BF32;
   margin-right: 8px;
   vertical-align: middle;
 }
@@ -289,7 +306,7 @@
 
 .leaflet-container {
   font-family: inherit;
-  background: #eef4f0;
+  background: #EEF1F9;
   position: relative;
   z-index: 0; /* own stacking context: whole map stays below sibling overlays */
 }
@@ -316,7 +333,7 @@
 /* Popup styling to match glass panels */
 .leaflet-popup-content-wrapper {
   border-radius: 12px;
-  box-shadow: 0 4px 24px rgba(13, 43, 26, 0.12), 0 1px 4px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 24px rgba(23, 36, 91, 0.12), 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
 .leaflet-popup-content {
