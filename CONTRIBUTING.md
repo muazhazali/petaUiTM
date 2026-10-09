@@ -162,6 +162,32 @@ This section explains how to ensure map data is accurate and how to structure co
 3. **Cross-reference official maps** — UiTM publishes campus maps on their faculty websites. Use them to verify building names and approximate shapes.
 4. If you're unsure about a polygon, open a PR anyway and note it as "needs verification" — someone with local knowledge can refine it.
 
+### Auto-Syncing Footprints from OpenStreetMap
+
+Instead of tracing polygons by hand, pull real building outlines from OSM. This matches each building in `buildings.json` to an OSM footprint by name + distance, simplifies the ring, and writes `polygon`/`coords` back (recording an `osm` id for provenance).
+
+```bash
+# Dry run — shows proposed matches, writes nothing
+pnpm sync:osm --campus shah-alam
+
+# Apply the confident matches
+pnpm sync:osm --campus shah-alam --write
+```
+
+Options:
+
+- `--campus <id>` — campus id from `campuses.json` (required)
+- `--write` — apply changes (default is a dry run)
+- `--max-distance <m>` — keep only footprints within this many metres of the building's coords (default 200)
+- `--min-area <m2>` — ignore tiny OSM footprints (default 40)
+- `--simplify <m>` — RDP simplification tolerance in metres (default 1.5)
+- `--min-sim <0-1>` — name-similarity floor for auto-accept (default 0.5)
+- `--endpoint <url>` — Overpass endpoint (default `overpass.openstreetmap.fr`)
+
+Buildings whose seed coords are too far off, or whose OSM footprint is unnamed/unrelated, are reported as `SKIP`/`REVIEW` rather than silently overwritten — fix those in the Map Editor (`/editor`, or `pnpm dev` then open it) or by correcting `coords`.
+
+Optional LLM assist: `--ollama` asks a model to confirm borderline name matches (needs `OLLAMA_API_KEY`, optional `OLLAMA_MODEL`/`OLLAMA_URL`). The geometry matching itself is deterministic; the model only answers yes/no on ambiguous names.
+
 ### Reporting Map Errors
 
 If you spot an inaccurate building outline or wrong label, [open an issue](https://github.com/muazhazali/petaUiTM/issues) using the **map error** label and include:

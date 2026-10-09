@@ -17,6 +17,8 @@ export interface Building {
   facilities: string[];
   hours: string;
   description?: string;
+  /** OSM provenance for a synced footprint, e.g. "way/312174877". */
+  osm?: string;
 }
 
 export interface Room {
