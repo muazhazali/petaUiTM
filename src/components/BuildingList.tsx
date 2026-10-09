@@ -38,7 +38,6 @@ export default function BuildingList({
   toBuilding,
   onSetFrom,
   onSetTo,
-  pois,
   activeCategories,
   onCategoriesChange,
 }: BuildingListProps) {
@@ -161,7 +160,7 @@ export default function BuildingList({
                   role="button"
                   tabIndex={0}
                   onClick={() => !navMode && onSelectBuilding(b)}
-                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); !navMode && onSelectBuilding(b); } }}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); if (!navMode) onSelectBuilding(b); } }}
                   className="px-4 py-3.5 cursor-pointer transition-colors hover:bg-stone-50 focus:outline-none focus-visible:bg-stone-50"
                   style={
                     isSelected

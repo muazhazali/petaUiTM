@@ -92,13 +92,26 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [selectedBuilding, setSelectedBuilding] = useState<Building | null>(null);
-  const [navMode, setNavMode] = useState(false);
-  const [fromBuilding, setFromBuilding] = useState<Building | null>(null);
-  const [toBuilding, setToBuilding] = useState<Building | null>(null);
-  const [routeGeoJSON, setRouteGeoJSON] = useState<GeoJSON.FeatureCollection | null>(null);
-  const [routeLoading, setRouteLoading] = useState(false);
-  const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
+  // Read URL params once at first render to seed state (no sync-in-effect)
+  const [initial] = useState(() => {
+    const buildingId = searchParams.get("building");
+    const fromId = searchParams.get("from");
+    const toId = searchParams.get("to");
+    const find = (id: string | null) => (id ? buildings.find((b) => b.id === id) ?? null : null);
+    const isNav = Boolean(fromId || toId);
+    return {
+      nav: isNav,
+      from: find(fromId),
+      to: find(toId),
+      building: isNav ? null : find(buildingId),
+    };
+  });
+
+  const [selectedBuilding, setSelectedBuilding] = useState<Building | null>(initial.building);
+  const [navMode, setNavMode] = useState(initial.nav);
+  const [fromBuilding, setFromBuilding] = useState<Building | null>(initial.from);
+  const [toBuilding, setToBuilding] = useState<Building | null>(initial.to);
+  const [routeState, setRouteState] = useState<{ key: string; info: RouteInfo | null } | null>(null);
   const [pois, setPois] = useState<POI[]>([]);
   const [activeCategories, setActiveCategories] = useState<Set<POICategory>>(new Set());
   const [showMap, setShowMap] = useState(false); // mobile toggle
@@ -111,42 +124,23 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
       .catch(() => {});
   }, [campus.id]);
 
-  // Sync state from URL params on load
-  useEffect(() => {
-    const buildingId = searchParams.get("building");
-    const fromId = searchParams.get("from");
-    const toId = searchParams.get("to");
+  const routeKey = fromBuilding && toBuilding ? `${fromBuilding.id}->${toBuilding.id}` : null;
 
-    if (fromId || toId) {
-      setNavMode(true);
-      if (fromId) {
-        const b = buildings.find((b) => b.id === fromId);
-        if (b) setFromBuilding(b);
-      }
-      if (toId) {
-        const b = buildings.find((b) => b.id === toId);
-        if (b) setToBuilding(b);
-      }
-    } else if (buildingId) {
-      const b = buildings.find((b) => b.id === buildingId);
-      if (b) setSelectedBuilding(b);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Fetch route when from/to change
+  // Fetch route when from/to change (setState only from async callback)
   useEffect(() => {
-    if (!fromBuilding || !toBuilding) {
-      setRouteGeoJSON(null);
-      return;
-    }
-    setRouteLoading(true);
+    if (!routeKey || !fromBuilding || !toBuilding) return;
+    let cancelled = false;
     fetchRoute(fromBuilding, toBuilding).then((info) => {
-      setRouteGeoJSON(info?.geojson ?? null);
-      setRouteInfo(info);
-      setRouteLoading(false);
+      if (cancelled) return;
+      setRouteState({ key: routeKey, info });
     });
-  }, [fromBuilding, toBuilding]);
+    return () => { cancelled = true; };
+  }, [routeKey, fromBuilding, toBuilding]);
+
+  const routeIsCurrent = routeKey !== null && routeState?.key === routeKey;
+  const routeInfo = routeIsCurrent && routeState ? routeState.info : null;
+  const routeGeoJSON = routeIsCurrent && routeState ? routeState.info?.geojson ?? null : null;
+  const routeLoading = routeKey !== null && !routeIsCurrent;
 
   // Sync URL params
   const syncUrl = useCallback(
@@ -207,8 +201,7 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
     setNavMode(false);
     setFromBuilding(null);
     setToBuilding(null);
-    setRouteGeoJSON(null);
-    setRouteInfo(null);
+    setRouteState(null);
     router.replace(`/${campus.id}`, { scroll: false });
   }, [router, campus.id]);
 
@@ -270,8 +263,8 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
                 onSwap={handleSwap}
                 onSetFrom={(b) => { setFromBuilding(b); syncUrl(b, toBuilding, null, true); }}
                 onSetTo={(b) => { setToBuilding(b); syncUrl(fromBuilding, b, null, true); }}
-                onClearFrom={() => { setFromBuilding(null); syncUrl(null, toBuilding, null, true); setRouteInfo(null); }}
-                onClearTo={() => { setToBuilding(null); syncUrl(fromBuilding, null, null, true); setRouteInfo(null); }}
+                onClearFrom={() => { setFromBuilding(null); syncUrl(null, toBuilding, null, true); }}
+                onClearTo={() => { setToBuilding(null); syncUrl(fromBuilding, null, null, true); }}
                 onClose={handleCloseNav}
               />
             </div>

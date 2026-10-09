@@ -91,6 +91,8 @@ export default function MapEditor() {
   const draggingRef = useRef<number | null>(null); // vertex index
   const refreshPendingRef = useRef(false);
   const refreshMapRef = useRef<() => void>(() => {});
+  const exitEditRef = useRef<() => void>(() => {});
+  const commitDrawRef = useRef<() => void>(() => {});
 
   useEffect(() => { modeRef.current = mode; }, [mode]);
   useEffect(() => { selIdRef.current = selectedId; }, [selectedId]);
@@ -269,7 +271,7 @@ export default function MapEditor() {
           map.dragging.enable();
           if (refreshPendingRef.current) {
             refreshPendingRef.current = false;
-            refreshMap();
+            refreshMapRef.current();
           }
         });
         m.on("click", (e) => {
@@ -335,7 +337,6 @@ export default function MapEditor() {
   }, [mapLoaded, updBuildings, vertexIcon, onDragVertex, pushUndo, syncDuringDrag, currentRing]);
 
   useEffect(() => { refreshMapRef.current = refreshMap; }, [refreshMap]);
-
   // ── load data ──────────────────────────────────────────────────────────────
 
   useEffect(() => {
@@ -450,14 +451,14 @@ export default function MapEditor() {
       if ((e.target as HTMLElement).tagName === "INPUT") return;
       if (e.key === "Escape") {
         setShowGuide((v) => { if (v) return false; return v; });
-        if (modeRef.current === "draw") commitDraw(); else exitEdit();
+        if (modeRef.current === "draw") commitDrawRef.current(); else exitEditRef.current();
       }
-      if (e.key === "Enter" && modeRef.current === "draw") commitDraw();
+      if (e.key === "Enter" && modeRef.current === "draw") commitDrawRef.current();
       if ((e.key === "z" || e.key === "Z") && (e.ctrlKey || e.metaKey)) { e.preventDefault(); if (e.shiftKey) { redo(); } else { undo(); } }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [undo, redo]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [undo, redo]);
 
   // ── sync buildings → map ───────────────────────────────────────────────────
 
@@ -495,6 +496,9 @@ export default function MapEditor() {
     } else { exitEdit(); }
     refreshMap();
   }, [exitEdit, updBuildings, refreshMap]);
+
+  useEffect(() => { exitEditRef.current = exitEdit; }, [exitEdit]);
+  useEffect(() => { commitDrawRef.current = commitDraw; }, [commitDraw]);
 
   const startDraw = useCallback((id: string) => {
     selIdRef.current = id; setSelectedId(id); setExpandedId(id);
