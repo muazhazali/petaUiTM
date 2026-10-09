@@ -78,7 +78,7 @@ export default async function Home() {
           zIndex: 1,
           maxWidth: 640,
           margin: "0 auto",
-          padding: "clamp(24px, 5vw, 56px) clamp(20px, 5vw, 40px)",
+          padding: "clamp(12px, 3.5vh, 36px) clamp(20px, 5vw, 40px)",
           display: "flex",
           flexDirection: "column",
           minHeight: "100svh",
@@ -91,7 +91,7 @@ export default async function Home() {
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            marginBottom: "clamp(40px, 8vw, 72px)",
+            marginBottom: "clamp(18px, 4vh, 32px)",
           }}
         >
           {/* Logo */}
@@ -137,47 +137,16 @@ export default async function Home() {
         </nav>
 
         {/* ── Hero ── */}
-        <section className="stagger-children" style={{ marginBottom: "clamp(32px, 6vw, 56px)" }}>
-          {/* Eyebrow */}
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              fontSize: 11,
-              fontWeight: 600,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              color: "oklch(0.32 0.09 155)",
-              background: "oklch(0.32 0.09 155 / 0.07)",
-              border: "1px solid oklch(0.32 0.09 155 / 0.18)",
-              padding: "4px 10px 4px 8px",
-              borderRadius: 100,
-              marginBottom: 20,
-            }}
-          >
-            <span
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: "50%",
-                background: "oklch(0.42 0.12 155)",
-                display: "block",
-                animation: "pulse-dot 2.5s ease-in-out infinite",
-              }}
-            />
-            Campus Navigation
-          </div>
-
+        <section className="stagger-children" style={{ marginBottom: "clamp(16px, 4vh, 32px)" }}>
           {/* Heading */}
           <h1
             style={{
               fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
-              fontSize: "clamp(2.6rem, 7.5vw, 4rem)",
+              fontSize: "clamp(2.2rem, 6.5vh, 3.4rem)",
               lineHeight: 1.06,
               letterSpacing: "-0.02em",
               color: "#1c1917",
-              marginBottom: 18,
+              marginBottom: 14,
               fontWeight: 400,
             }}
           >
@@ -189,10 +158,10 @@ export default async function Home() {
 
           <p
             style={{
-              fontSize: 15,
-              lineHeight: 1.7,
-              color: "#78716c",
-              maxWidth: 400,
+            fontSize: 15,
+            lineHeight: 1.6,
+            color: "#78716c",
+            maxWidth: 400,
               fontWeight: 300,
               marginBottom: 0,
             }}
@@ -209,14 +178,14 @@ export default async function Home() {
             display: "grid",
             gridTemplateColumns: "repeat(3, 1fr)",
             gap: 8,
-            marginBottom: "clamp(28px, 5vw, 44px)",
+            marginBottom: "clamp(14px, 3vh, 24px)",
           }}
         >
           {FEATURES.map(({ icon: Icon, label, detail }) => (
             <div
               key={label}
               style={{
-                padding: "12px 14px",
+                padding: "10px 12px",
                 borderRadius: 12,
                 border: "1px solid #e7e5e4",
                 background: "rgba(255,255,255,0.7)",
@@ -231,7 +200,7 @@ export default async function Home() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  marginBottom: 8,
+                  marginBottom: 6,
                 }}
               >
                 <Icon style={{ width: 14, height: 14, color: "oklch(0.32 0.09 155)" }} />
@@ -244,40 +213,10 @@ export default async function Home() {
           ))}
         </div>
 
-        {/* ── Section label ── */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            marginBottom: 14,
-          }}
-        >
-          <span
-            style={{
-              fontSize: 10,
-              fontWeight: 600,
-              letterSpacing: "0.14em",
-              textTransform: "uppercase",
-              color: "#a8a29e",
-              whiteSpace: "nowrap",
-            }}
-          >
-            Select a campus
-          </span>
-          <div
-            style={{
-              flex: 1,
-              height: 1,
-              background: "linear-gradient(to right, #e7e5e4, transparent)",
-            }}
-          />
-        </div>
-
         {/* ── Campus list ── */}
         <div
           className="stagger-children"
-          style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: "clamp(28px, 5vw, 44px)" }}
+          style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: "clamp(12px, 2.5vh, 20px)" }}
         >
           {campuses.map((campus, i) => (
             <Link
@@ -348,43 +287,6 @@ export default async function Home() {
               </div>
             </Link>
           ))}
-
-          {/* Coming soon */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 14,
-              padding: "14px 16px",
-              borderRadius: 14,
-              border: "1.5px dashed #e7e5e4",
-              opacity: 0.5,
-              cursor: "not-allowed",
-              userSelect: "none",
-            }}
-          >
-            <div
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 10,
-                background: "#f5f5f4",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-                fontFamily: "var(--font-dm-serif), Georgia, serif",
-                fontSize: 17,
-                color: "#a8a29e",
-              }}
-            >
-              02
-            </div>
-            <div>
-              <p style={{ fontSize: 15, fontWeight: 600, color: "#a8a29e" }}>More campuses</p>
-              <p style={{ fontSize: 12, color: "#c4c0bb" }}>Coming soon · contributions welcome</p>
-            </div>
-          </div>
         </div>
 
         {/* ── Footer ── */}
@@ -394,7 +296,7 @@ export default async function Home() {
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            paddingTop: 20,
+            paddingTop: 12,
             borderTop: "1px solid #e7e5e4",
           }}
         >
@@ -426,7 +328,7 @@ export default async function Home() {
         }
 
         @keyframes fade-in-up {
-          from { opacity: 0; transform: translateY(14px); }
+          from { opacity: 0; transform: translateY(8px); }
           to   { opacity: 1; transform: translateY(0); }
         }
 
@@ -443,8 +345,8 @@ export default async function Home() {
           display: flex;
           align-items: center;
           gap: 14px;
-          padding: 14px 16px;
-          border-radius: 14px;
+          padding: 10px 14px;
+          border-radius: 12px;
           border: 1px solid #e7e5e4;
           background: rgba(255,255,255,0.75);
           text-decoration: none;
@@ -474,8 +376,8 @@ export default async function Home() {
 
         @media (max-width: 480px) {
           .campus-card {
-            padding: 12px 14px;
-            border-radius: 12px;
+            padding: 9px 12px;
+            border-radius: 11px;
           }
         }
 
