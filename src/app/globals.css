@@ -290,7 +290,13 @@
 .leaflet-container {
   font-family: inherit;
   background: #eef4f0;
+  position: relative;
+  z-index: 0; /* own stacking context: whole map stays below sibling overlays */
 }
+
+/* Cap Leaflet internal pane z-indexes (belt-and-braces with the container
+   stacking context above; also fixes overlaps with in-map editor overlays). */
+.leaflet-pane { z-index: 50; }
 
 /* Clear default divIcon styling for custom markers */
 .marker-pill-wrapper,
