@@ -179,6 +179,16 @@ const SYNONYMS = {
   ukur: "surveying",
   studies: "pengajian",
   pengajian: "studies",
+  art: "seni",
+  seni: "art",
+  design: "reka",
+  reka: "design",
+  music: "muzik",
+  muzik: "music",
+  accounting: "perakaunan",
+  perakaunan: "accounting",
+  information: "maklumat",
+  maklumat: "information",
 };
 
 function expandTokens(set) {

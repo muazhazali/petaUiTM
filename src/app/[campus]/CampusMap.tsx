@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, Suspense } from "react";
 import dynamic from "next/dynamic";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Building, Campus, POI, POICategory, Room, Waypoint } from "@/types";
-import BuildingSheet from "@/components/BuildingSheet";
+import BuildingSheet, { type SheetSnap } from "@/components/BuildingSheet";
 import NavigationPanel from "@/components/NavigationPanel";
 import BuildingList from "@/components/BuildingList";
 import { MapPin, ChevronLeft, Navigation, Map, ArrowLeft } from "lucide-react";
@@ -118,7 +118,10 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
   const [pois, setPois] = useState<POI[]>([]);
   const [activeCategories, setActiveCategories] = useState<Set<POICategory>>(new Set());
   const [showMap, setShowMap] = useState(false); // mobile toggle
+  const [sheetSnap, setSheetSnap] = useState<SheetSnap>("half"); // mobile detail sheet
   const [focusRoom, setFocusRoom] = useState<{ floor: number; roomId: string } | null>(null);
+
+  const isSmallScreen = () => typeof window !== "undefined" && window.innerWidth < 1024;
 
   // Load POIs for this campus
   useEffect(() => {
@@ -181,6 +184,10 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
       setSelectedBuilding(building);
       setFocusRoom(null);
       syncUrl(null, null, building, false);
+      if (building) {
+        if (isSmallScreen()) setShowMap(true);
+        setSheetSnap((s) => (s === "peek" ? "half" : s));
+      }
     },
     [navMode, fromBuilding, toBuilding, syncUrl]
   );
@@ -194,6 +201,10 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
       setFocusRoom({ floor: room.floor, roomId: room.svgElementId });
       setSelectedBuilding(building);
       syncUrl(null, null, building, false);
+      if (isSmallScreen()) {
+        setShowMap(true);
+        setSheetSnap("tall");
+      }
     },
     [navMode, handleBuildingSelect, syncUrl]
   );
@@ -395,19 +406,26 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
             pois={pois}
             activeCategories={activeCategories}
             onDirectionsTo={handleDirectionsTo}
+            detailOffset={{
+              right: 416,
+              bottomFraction: sheetSnap === "half" ? 0.45 : sheetSnap === "tall" ? 0.92 : 0.16,
+            }}
+            onUserPanStart={() => setSheetSnap("peek")}
+          />
+
+          {/* Building detail — docked panel on desktop, snap sheet on mobile */}
+          <BuildingSheet
+            building={navMode ? null : selectedBuilding}
+            onClose={() => { setSelectedBuilding(null); setFocusRoom(null); }}
+            onSetFrom={handleSetFrom}
+            onSetTo={handleSetTo}
+            focusFloor={focusRoom?.floor}
+            focusRoomId={focusRoom?.roomId}
+            snap={sheetSnap}
+            onSnapChange={setSheetSnap}
           />
         </div>
       </div>
-
-      {/* Building info sheet — unchanged */}
-      <BuildingSheet
-        building={navMode ? null : selectedBuilding}
-        onClose={() => { setSelectedBuilding(null); setFocusRoom(null); }}
-        onSetFrom={handleSetFrom}
-        onSetTo={handleSetTo}
-        focusFloor={focusRoom?.floor}
-        focusRoomId={focusRoom?.roomId}
-      />
     </div>
   );
 }

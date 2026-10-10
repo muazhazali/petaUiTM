@@ -19,6 +19,11 @@ interface MapComponentProps {
   pois?: POI[];
   activeCategories?: Set<POICategory>;
   onDirectionsTo?: (point: Waypoint) => void;
+  /** Pixels of detail panel covering the map (right on desktop, bottom on mobile);
+   *  fly-to pans the selected building into the uncovered area instead of dead-centre. */
+  detailOffset?: { right?: number; bottomFraction?: number };
+  /** Fired when the user drags the map (used to collapse the mobile detail sheet). */
+  onUserPanStart?: () => void;
 }
 
 const SELECTED_STYLE = { color: "#17245B", weight: 2.5, fillColor: "#5B267B", fillOpacity: 0.7 };
@@ -35,6 +40,8 @@ export default function MapComponent({
   pois = [],
   activeCategories,
   onDirectionsTo,
+  detailOffset,
+  onUserPanStart,
 }: MapComponentProps) {
   const mapRef = useRef<L.Map | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -48,6 +55,19 @@ export default function MapComponent({
   const buildingMarkersRef = useRef<L.Marker[]>([]);
   const selectedIdRef = useRef<string | null>(null);
   const directionsToRef = useRef<MapComponentProps["onDirectionsTo"]>(undefined);
+  const detailOffsetRef = useRef(detailOffset);
+  const onUserPanStartRef = useRef(onUserPanStart);
+  const zoomControlRef = useRef<L.Control | null>(null);
+  const locateControlRef = useRef<L.Control | null>(null);
+  const pendingFocusRef = useRef<(() => boolean) | null>(null);
+
+  useEffect(() => {
+    detailOffsetRef.current = detailOffset;
+  }, [detailOffset]);
+
+  useEffect(() => {
+    onUserPanStartRef.current = onUserPanStart;
+  }, [onUserPanStart]);
 
   useEffect(() => {
     directionsToRef.current = onDirectionsTo;
@@ -75,9 +95,25 @@ export default function MapComponent({
       zoomControl: false,
     });
 
+    // The map can mount inside a hidden container (mobile list view), so Leaflet
+    // caches a 0×0 size. Observe the container and invalidate when it gains layout.
+    let resizeObserver: ResizeObserver | null = null;
+    if (containerRef.current && typeof ResizeObserver !== "undefined") {
+      resizeObserver = new ResizeObserver(() => {
+        requestAnimationFrame(() => mapRef.current?.invalidateSize());
+      });
+      resizeObserver.observe(containerRef.current);
+    }
+
     L.tileLayer(OSM_TILES, { maxZoom: 19, attribution: OSM_ATTR }).addTo(map);
 
-    L.control.zoom({ position: "bottomright" }).addTo(map);
+    // On small screens the bottom-right corner is covered by the detail sheet,
+    // so map controls move to the top-right.
+    const controlPos =
+      typeof window !== "undefined" && window.innerWidth < 1024 ? "topright" : "bottomright";
+
+    const zoomControl = L.control.zoom({ position: controlPos }).addTo(map);
+    zoomControlRef.current = zoomControl;
 
     const LocateControl = L.Control.extend({
       onAdd() {
@@ -94,9 +130,10 @@ export default function MapComponent({
         return el;
       },
     });
-    new (LocateControl as unknown as new (opts?: L.ControlOptions) => L.Control)({
-      position: "bottomright",
+    const locateControl = new (LocateControl as unknown as new (opts?: L.ControlOptions) => L.Control)({
+      position: controlPos,
     }).addTo(map);
+    locateControlRef.current = locateControl;
 
     map.on("locationfound", (e: L.LocationEvent) => {
       locateMarkerRef.current?.remove();
@@ -198,10 +235,24 @@ export default function MapComponent({
       onBuildingSelect(null);
     });
 
+    // Let the consumer react to user map drags (e.g. collapse the mobile detail sheet).
+    map.on("dragstart", () => {
+      onUserPanStartRef.current?.();
+    });
+
+    // A deferred focus (map was hidden when the building was selected) runs once
+    // the container gains a layout size.
+    map.on("resize", () => {
+      if (pendingFocusRef.current?.()) pendingFocusRef.current = null;
+    });
+
     mapRef.current = map;
     return () => {
+      resizeObserver?.disconnect();
       map.remove();
       mapRef.current = null;
+      zoomControlRef.current = null;
+      locateControlRef.current = null;
       buildingsLayerRef.current = null;
       routeLayerRef.current = null;
       routeCoreRef.current = null;
@@ -245,15 +296,36 @@ export default function MapComponent({
     }
   }, [routeGeoJSON]);
 
-  // Pan to selected building
+  // Pan to selected building, offset so it lands in the area not covered by the
+  // detail panel (docked right on desktop, bottom sheet on mobile) instead of dead-centre.
+  // Deferred while the map container has no layout (e.g. mobile list view still open).
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !selectedBuilding) return;
-    map.flyTo(
-      [selectedBuilding.coords[0], selectedBuilding.coords[1]],
-      Math.max(map.getZoom(), 17),
-      { duration: 0.8 }
-    );
+    const run = () => {
+      const size = map.getSize();
+      if (!size.x || !size.y) return false;
+      const zoom = Math.max(map.getZoom(), 17);
+      const small = typeof window !== "undefined" && window.innerWidth < 1024;
+      const { right = 0, bottomFraction = 0 } = detailOffsetRef.current ?? {};
+      const dx = small ? 0 : right / 2;
+      const dy = small ? (bottomFraction * size.y) / 2 : 0;
+      const target = map.project([selectedBuilding.coords[0], selectedBuilding.coords[1]], zoom);
+      const shifted = dx || dy ? target.add(L.point(dx, dy)) : target;
+      const dest = map.unproject(shifted, zoom);
+      if (!Number.isFinite(dest.lat) || !Number.isFinite(dest.lng)) return false;
+      map.flyTo(dest, zoom, { duration: 0.8 });
+      return true;
+    };
+    if (!run()) pendingFocusRef.current = run;
+  }, [selectedBuilding]);
+
+  // Keep map controls reachable while the desktop detail panel is docked over the right side.
+  useEffect(() => {
+    if (typeof window === "undefined" || window.innerWidth < 1024) return;
+    const position: L.ControlPosition = selectedBuilding ? "bottomleft" : "bottomright";
+    zoomControlRef.current?.setPosition(position);
+    locateControlRef.current?.setPosition(position);
   }, [selectedBuilding]);
 
   // Update building pill selected state
