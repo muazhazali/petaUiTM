@@ -117,7 +117,7 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
   const [routeRetryToken, setRouteRetryToken] = useState(0);
   const [pois, setPois] = useState<POI[]>([]);
   const [activeCategories, setActiveCategories] = useState<Set<POICategory>>(new Set());
-  const [showMap, setShowMap] = useState(false); // mobile toggle
+  const [showMap, setShowMap] = useState(Boolean(initial.building)); // mobile toggle; deep-linked buildings show the map + sheet
   const [sheetSnap, setSheetSnap] = useState<SheetSnap>("half"); // mobile detail sheet
   const [focusRoom, setFocusRoom] = useState<{ floor: number; roomId: string } | null>(null);
 
@@ -381,7 +381,7 @@ function CampusMapInner({ campus, buildings }: CampusMapProps) {
         <div
           className={`flex-1 relative
                       hidden lg:block
-                      ${showMap ? "!block fixed inset-0 z-40" : ""}`}
+                      ${showMap ? "max-lg:!block max-lg:fixed max-lg:inset-0 max-lg:z-40" : ""}`}
         >
           {/* Mobile: back to list button */}
           {showMap && (
