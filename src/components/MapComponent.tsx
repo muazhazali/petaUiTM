@@ -96,14 +96,26 @@ export default function MapComponent({
     });
 
     // The map can mount inside a hidden container (mobile list view), so Leaflet
-    // caches a 0×0 size. Observe the container and invalidate when it gains layout.
+    // caches a 0×0 size. Observe the container and invalidate the moment it gains
+    // layout. The invalidation must run synchronously inside the observer
+    // callback: deferring it via requestAnimationFrame silently drops it
+    // whenever the page is not actively rendering (background tab, screen off),
+    // which leaves the map stuck at 0×0 with tiles missing.
     let resizeObserver: ResizeObserver | null = null;
     if (containerRef.current && typeof ResizeObserver !== "undefined") {
       resizeObserver = new ResizeObserver(() => {
-        requestAnimationFrame(() => mapRef.current?.invalidateSize());
+        if (typeof document === "undefined" || document.visibilityState !== "visible") return;
+        mapRef.current?.invalidateSize();
       });
       resizeObserver.observe(containerRef.current);
     }
+
+    // Safety net: if the container gained/changed layout while the page was
+    // hidden, the observer callback above skipped it — re-sync on return.
+    const onVisible = () => {
+      if (document.visibilityState === "visible") mapRef.current?.invalidateSize();
+    };
+    document.addEventListener("visibilitychange", onVisible);
 
     L.tileLayer(OSM_TILES, { maxZoom: 19, attribution: OSM_ATTR }).addTo(map);
 
@@ -248,6 +260,7 @@ export default function MapComponent({
 
     mapRef.current = map;
     return () => {
+      document.removeEventListener("visibilitychange", onVisible);
       resizeObserver?.disconnect();
       map.remove();
       mapRef.current = null;
