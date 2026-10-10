@@ -18,6 +18,12 @@
 //   --ollama-model <m>   Ollama model (default from OLLAMA_MODEL or llama3.1)
 //
 // Requires OLLAMA_API_KEY for --ollama (or a self-hosted URL via OLLAMA_URL).
+//
+// Overrides: buildings whose app coords are unreliable or whose names can't be
+// matched automatically get pinned to a verified OSM way below (key = shortName,
+// value = osm way id). Overrides always win over automatic matching and skip
+// the name-disagreement review, because they were verified visually against
+// satellite imagery.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -46,6 +52,22 @@ const opts = {
   endpoint: arg("endpoint", DEFAULT_ENDPOINT),
   ollama: Boolean(arg("ollama", false)),
   ollamaModel: arg("ollama-model", process.env.OLLAMA_MODEL || "llama3.1"),
+};
+
+// Verified manually against satellite imagery; see docs below each pin.
+const OVERRIDES = {
+  "shah-alam": {
+    FKA: "way/348054778", // Faculty of Civil Engineering (L-complex); stored coords were ~560m off
+    AAGBS: "way/351639459", // Ayub Arshad Graduate Business School; stored coords sat on Pusat Kokurikulum
+    PKO: "way/312175819", // Pusat Kokurikulum
+    FCM: "way/351567510", // large unnamed communication-faculty complex 60m from stored coords
+    Konsert: "way/351567486", // Dewan Sri Budiman concert hall (shares the hall with DSB)
+    "KK Anggerik": "way/312027794", // Kolej Anggerik compound; stored coords sat inside the civil faculty
+    "KK Meranti": "way/374087667", // Kolej Meranti compound; stored coords were ~1.3km off in private housing
+    "KK Teratai": "way/1550270731", // Kolej Teratai site polygon; stored coords ~700m off
+    "KK Perindu": "way/1237626937", // Kolej Perindu site polygon; stored coords ~1km off
+    "KK Seroja": "way/312175315", // largest outer block of relation/12477603 (Kolej Seroja multipolygon)
+  },
 };
 
 if (!opts.campus) {
@@ -112,15 +134,64 @@ function normalize(s) {
   return (s || "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, " ")
-    .replace(/\b(kolej|kediaman|fakulti|kompleks|bangunan|dewan|pusat|blok|block|uitm|the|of|and)\b/g, "")
+    .replace(
+      /\b(kolej|kediaman|fakulti|kompleks|bangunan|dewan|pusat|blok|block|uitm|the|of|and|dan)\b/g,
+      ""
+    )
     .replace(/\s+/g, " ")
     .trim();
 }
 
 const STOP = new Set(["faculty", "kompleks", "kolej", "kediaman", "bangunan", "dewan", "pusat"]);
 
+// One-hop Malay<->English expansion so "Fakulti Kejuruteraan Awam" can match
+// "Faculty of Civil Engineering" etc. Names in campus data mix both languages.
+const SYNONYMS = {
+  business: "perniagaan",
+  perniagaan: "business",
+  management: "pengurusan",
+  pengurusan: "management",
+  science: "sains",
+  sains: "science",
+  applied: "gunaan",
+  gunaan: "applied",
+  engineering: "kejuruteraan",
+  kejuruteraan: "engineering",
+  civil: "awam",
+  awam: "civil",
+  electrical: "elektrikal",
+  elektrikal: "electrical",
+  mechanical: "mekanikal",
+  mekanikal: "mechanical",
+  chemical: "kimia",
+  kimia: "chemical",
+  communication: "komunikasi",
+  komunikasi: "communication",
+  computer: "komputer",
+  komputer: "computer",
+  pharmacy: "farmasi",
+  farmasi: "pharmacy",
+  medicine: "perubatan",
+  perubatan: "medicine",
+  education: "pendidikan",
+  pendidikan: "education",
+  surveying: "ukur",
+  ukur: "surveying",
+  studies: "pengajian",
+  pengajian: "studies",
+};
+
+function expandTokens(set) {
+  const out = new Set(set);
+  for (const t of set) {
+    const s = SYNONYMS[t];
+    if (s) out.add(s);
+  }
+  return out;
+}
+
 function tokenSet(s) {
-  return new Set(normalize(s).split(" ").filter((t) => t.length > 2 && !STOP.has(t)));
+  return expandTokens(new Set(normalize(s).split(" ").filter((t) => t.length > 2 && !STOP.has(t))));
 }
 
 function nameSimilarity(a, b) {
@@ -134,6 +205,18 @@ function nameSimilarity(a, b) {
   const nb = normalize(b);
   const substr = na && nb && (na.includes(nb) || nb.includes(na)) ? 0.85 : 0;
   return Math.max(dice, substr);
+}
+
+function pointInPolygon(pt, ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i]; // [lng, lat]
+    const [xj, yj] = ring[j];
+    if (yi > pt[0] !== yj > pt[0] && pt[1] < ((xj - xi) * (pt[0] - yi)) / (yj - yi) + xi) {
+      inside = !inside;
+    }
+  }
+  return inside;
 }
 
 function perpendicular(p, a, b) {
@@ -173,9 +256,11 @@ function simplifyRing(ring, proj, tolerance) {
   return simplified.map(proj.from);
 }
 
-async function overpass(bbox, endpoint) {
+async function overpass(bbox, endpoint, overrideIds = []) {
   const [south, west, north, east] = bbox;
-  const query = `[out:json][timeout:180];way["building"](${south},${west},${north},${east});out geom;`;
+  const bareIds = overrideIds.map((id) => String(id).replace(/^.*\//, ""));
+  const overrides = bareIds.length ? `way(id:${bareIds.join(",")});` : "";
+  const query = `[out:json][timeout:180];( way["building"](${south},${west},${north},${east}); ${overrides} );out geom;`;
   const res = await fetch(endpoint, {
     method: "POST",
     headers: {
@@ -185,7 +270,12 @@ async function overpass(bbox, endpoint) {
     },
     body: `data=${encodeURIComponent(query)}`,
   });
-  if (!res.ok) throw new Error(`Overpass ${res.status} ${res.statusText}`);
+  if (!res.ok) {
+    const body = await res.text();
+    const stripped = body.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    const msg = stripped.slice(-350);
+    throw new Error(`Overpass ${res.status} ${res.statusText}: ${msg}`);
+  }
   const data = await res.json();
   return data.elements ?? [];
 }
@@ -262,7 +352,8 @@ async function main() {
 
   console.log(`Campus: ${campus.name} (${opts.campus})`);
   console.log(`Querying Overpass ${opts.endpoint} …`);
-  const elements = await overpass(bbox, opts.endpoint);
+  const overrideIds = [...new Set(Object.values(OVERRIDES[opts.campus] ?? {}))];
+  const elements = await overpass(bbox, opts.endpoint, overrideIds);
   console.log(`OSM ways returned: ${elements.length}`);
 
   const footprints = elements
@@ -277,6 +368,8 @@ async function main() {
   const report = [];
 
   for (const b of targets) {
+    const overrideId = OVERRIDES[opts.campus]?.[b.shortName];
+
     // rank candidates by name similarity first, then distance
     const scored = footprints
       .map((fp) => ({
@@ -291,17 +384,47 @@ async function main() {
 
     let chosen = null;
     let reason = "";
+    let forced = false;
 
-    if (named && named.dist <= opts.maxDistance) {
+    if (overrideId) {
+      const ov = footprints.find((f) => f.osmId === overrideId);
+      if (ov) {
+        chosen = ov;
+        forced = true;
+        reason = `override ${overrideId} name="${ov.name}"`;
+      } else {
+        report.push(
+          `NOTE   ${b.shortName.padEnd(12)} override ${overrideId} not in OSM results; auto matching`
+        );
+      }
+    }
+
+    if (!chosen && named && named.dist <= opts.maxDistance) {
       chosen = named.fp;
       reason = `name="${named.fp.name}" sim=${named.sim.toFixed(2)} d=${named.dist.toFixed(0)}m`;
     } else if (
+      !chosen &&
       nearest &&
       nearest.dist <= 25 &&
       (nearest.fp.name === "" || nearest.sim >= 0.25)
     ) {
       chosen = nearest.fp;
       reason = `nearest d=${nearest.dist.toFixed(0)}m (weak/unnamed) OSM="${nearest.fp.name}"`;
+    }
+
+    // Containment fallback: buildings inside large sites (kola complexes etc.)
+    // can be far from the footprint centroid, but sitting within the polygon is
+    // strong positional evidence — accept unnamed or name-consistent footprints.
+    if (!chosen) {
+      for (const s of scored) {
+        if (s.dist > 60) break;
+        if (s.fp.name && s.sim < 0.25) continue;
+        if (pointInPolygon(b.coords, s.fp.ring)) {
+          chosen = s.fp;
+          reason = `inside OSM footprint d=${s.dist.toFixed(0)}m OSM="${s.fp.name}"`;
+          break;
+        }
+      }
     }
 
     if (!chosen) {
@@ -313,26 +436,28 @@ async function main() {
     }
 
     // Name strongly disagrees and candidate is far → needs human review
-    const sim = Math.max(nameSimilarity(b.name, chosen.name), nameSimilarity(b.shortName, chosen.name));
-    const dist = haversine(b.coords, chosen.centroid);
-    if (chosen.name && sim < opts.minSim && dist > 25) {
-      let note = `OSM="${chosen.name}" sim=${sim.toFixed(2)} d=${dist.toFixed(0)}m`;
-      if (opts.ollama) {
-        const verdict = await ollamaConfirm(b, chosen);
-        if (verdict === true) {
-          note += " +ollama:yes";
-          b.polygon = chosen.ring.map(([lng, lat]) => [round6(lng), round6(lat)]);
-          b.coords = [round6(chosen.centroid[0]), round6(chosen.centroid[1])];
-          b.osm = chosen.osmId;
-          updated++;
-          report.push(`OK*    ${b.shortName.padEnd(12)} ${note}`);
-          continue;
+    if (!forced) {
+      const sim = Math.max(nameSimilarity(b.name, chosen.name), nameSimilarity(b.shortName, chosen.name));
+      const dist = haversine(b.coords, chosen.centroid);
+      if (chosen.name && sim < opts.minSim && dist > 25) {
+        let note = `OSM="${chosen.name}" sim=${sim.toFixed(2)} d=${dist.toFixed(0)}m`;
+        if (opts.ollama) {
+          const verdict = await ollamaConfirm(b, chosen);
+          if (verdict === true) {
+            note += " +ollama:yes";
+            b.polygon = chosen.ring.map(([lng, lat]) => [round6(lng), round6(lat)]);
+            b.coords = [round6(chosen.centroid[0]), round6(chosen.centroid[1])];
+            b.osm = chosen.osmId;
+            updated++;
+            report.push(`OK*    ${b.shortName.padEnd(12)} ${note}`);
+            continue;
+          }
+          note += verdict === false ? " +ollama:no" : " +ollama:unavailable";
         }
-        note += verdict === false ? " +ollama:no" : " +ollama:unavailable";
+        reviewed++;
+        report.push(`REVIEW ${b.shortName.padEnd(12)} ${note}`);
+        continue;
       }
-      reviewed++;
-      report.push(`REVIEW ${b.shortName.padEnd(12)} ${note}`);
-      continue;
     }
 
     b.polygon = chosen.ring.map(([lng, lat]) => [round6(lng), round6(lat)]);

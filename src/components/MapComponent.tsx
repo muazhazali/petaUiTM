@@ -249,6 +249,7 @@ export default function MapComponent({
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !selectedBuilding) return;
+    console.log("FLYTO debug", selectedBuilding.id, JSON.stringify(selectedBuilding.coords), typeof selectedBuilding.coords, selectedBuilding);
     map.flyTo(
       [selectedBuilding.coords[0], selectedBuilding.coords[1]],
       Math.max(map.getZoom(), 17),

@@ -530,29 +530,21 @@
     "name": "Kompleks Al-Farabi",
     "shortName": "AAGBS",
     "coords": [
-      3.0685,
-      101.4995
+      3.063589,
+      101.503491
     ],
     "polygon": [
       [
-        101.4993,
-        3.0683
+        101.503142,
+        3.063703
       ],
       [
-        101.4997,
-        3.0683
+        101.503837,
+        3.063715
       ],
       [
-        101.4997,
-        3.0687
-      ],
-      [
-        101.4993,
-        3.0687
-      ],
-      [
-        101.4993,
-        3.0683
+        101.503841,
+        3.063475
       ]
     ],
     "floors": 5,
@@ -563,7 +555,8 @@
       "executive lounge"
     ],
     "hours": "8:00–20:00",
-    "description": "Arshad Ayub Graduate Business School (AAGBS) — UiTM's graduate business school offering MBA and DBA programs."
+    "description": "Arshad Ayub Graduate Business School (AAGBS) — UiTM's graduate business school offering MBA and DBA programs.",
+    "osm": "way/351639459"
   },
   {
     "id": "shah-alam-fas",
@@ -571,29 +564,25 @@
     "name": "Fakulti Sains Gunaan",
     "shortName": "FAS",
     "coords": [
-      3.0654,
-      101.5048
+      3.065409,
+      101.504607
     ],
     "polygon": [
       [
-        101.5046,
-        3.0652
+        101.50454,
+        3.065645
       ],
       [
-        101.505,
-        3.0652
+        101.504539,
+        3.065174
       ],
       [
-        101.505,
-        3.0656
+        101.504674,
+        3.065174
       ],
       [
-        101.5046,
-        3.0656
-      ],
-      [
-        101.5046,
-        3.0652
+        101.504675,
+        3.065549
       ]
     ],
     "floors": 5,
@@ -603,7 +592,8 @@
       "research labs"
     ],
     "hours": "7:00–22:00",
-    "description": "Faculty of Applied Science offering programs in biology, chemistry, physics, and related fields."
+    "description": "Faculty of Applied Science offering programs in biology, chemistry, physics, and related fields.",
+    "osm": "way/351567501"
   },
   {
     "id": "shah-alam-fbm",
@@ -611,29 +601,37 @@
     "name": "Fakulti Pengurusan Perniagaan",
     "shortName": "FBM",
     "coords": [
-      3.064379,
-      101.504167
+      3.064375,
+      101.50416
     ],
     "polygon": [
       [
-        101.503967,
-        3.064079
+        101.50407,
+        3.06471
       ],
       [
-        101.504367,
-        3.064079
+        101.504251,
+        3.06471
       ],
       [
-        101.504367,
-        3.064679
+        101.504251,
+        3.064422
       ],
       [
-        101.503967,
-        3.064679
+        101.504171,
+        3.064422
       ],
       [
-        101.503967,
-        3.064079
+        101.504171,
+        3.064308
+      ],
+      [
+        101.504265,
+        3.064308
+      ],
+      [
+        101.504265,
+        3.064049
       ]
     ],
     "floors": 5,
@@ -643,7 +641,8 @@
       "business labs"
     ],
     "hours": "7:00–22:00",
-    "description": "Faculty of Business & Management offering undergraduate and postgraduate business programs."
+    "description": "Faculty of Business & Management offering undergraduate and postgraduate business programs.",
+    "osm": "way/351639457"
   },
   {
     "id": "shah-alam-law",
@@ -788,29 +787,69 @@
     "name": "Fakulti Kejuruteraan Awam",
     "shortName": "FKA",
     "coords": [
-      3.06985,
-      101.5015
+      3.071596,
+      101.496633
     ],
     "polygon": [
       [
-        101.5013,
-        3.06965
+        101.496753,
+        3.072449
       ],
       [
-        101.5017,
-        3.06965
+        101.497099,
+        3.072217
       ],
       [
-        101.5017,
-        3.07005
+        101.496907,
+        3.07193
       ],
       [
-        101.5013,
-        3.07005
+        101.496702,
+        3.072067
       ],
       [
-        101.5013,
-        3.06965
+        101.49667,
+        3.072019
+      ],
+      [
+        101.496713,
+        3.071991
+      ],
+      [
+        101.496624,
+        3.07186
+      ],
+      [
+        101.497165,
+        3.071497
+      ],
+      [
+        101.497123,
+        3.07131
+      ],
+      [
+        101.497013,
+        3.071228
+      ],
+      [
+        101.496452,
+        3.071613
+      ],
+      [
+        101.496363,
+        3.071483
+      ],
+      [
+        101.496925,
+        3.071098
+      ],
+      [
+        101.496879,
+        3.070939
+      ],
+      [
+        101.496734,
+        3.070861
       ]
     ],
     "floors": 4,
@@ -821,7 +860,8 @@
       "materials testing lab"
     ],
     "hours": "7:00–22:00",
-    "description": "Civil Engineering faculty offering undergraduate and postgraduate programs in civil and structural engineering."
+    "description": "Civil Engineering faculty offering undergraduate and postgraduate programs in civil and structural engineering.",
+    "osm": "way/348054778"
   },
   {
     "id": "shah-alam-fkm-comm",
@@ -829,29 +869,21 @@
     "name": "Fakulti Komunikasi & Pengajian Media",
     "shortName": "FCM",
     "coords": [
-      3.0668,
-      101.5035
+      3.066733,
+      101.504068
     ],
     "polygon": [
       [
-        101.5033,
-        3.0666
+        101.503816,
+        3.067167
       ],
       [
-        101.5037,
-        3.0666
+        101.504324,
+        3.067164
       ],
       [
-        101.5037,
-        3.067
-      ],
-      [
-        101.5033,
-        3.067
-      ],
-      [
-        101.5033,
-        3.0666
+        101.504319,
+        3.066299
       ]
     ],
     "floors": 4,
@@ -862,7 +894,8 @@
       "media labs"
     ],
     "hours": "7:00–22:00",
-    "description": "Faculty of Communication & Media Studies offering programs in journalism, broadcasting, and media management."
+    "description": "Faculty of Communication & Media Studies offering programs in journalism, broadcasting, and media management.",
+    "osm": "way/351567510"
   },
   {
     "id": "shah-alam-apb",
@@ -1067,29 +1100,29 @@
     "name": "Pusat Kesatria & Kokurikulum",
     "shortName": "PKO",
     "coords": [
-      3.0705,
-      101.4965
+      3.068323,
+      101.49981
     ],
     "polygon": [
       [
-        101.4963,
-        3.0703
+        101.499612,
+        3.068366
       ],
       [
-        101.4967,
-        3.0703
+        101.499808,
+        3.068493
       ],
       [
-        101.4967,
-        3.0707
+        101.499881,
+        3.068481
       ],
       [
-        101.4963,
-        3.0707
+        101.500009,
+        3.068288
       ],
       [
-        101.4963,
-        3.0703
+        101.499816,
+        3.068153
       ]
     ],
     "floors": 3,
@@ -1100,7 +1133,8 @@
       "sports clubs"
     ],
     "hours": "8:00–17:00",
-    "description": "Co-curricular centre managing student co-curricular activities, uniformed bodies, and Kesatria national service."
+    "description": "Co-curricular centre managing student co-curricular activities, uniformed bodies, and Kesatria national service.",
+    "osm": "way/312175819"
   },
   {
     "id": "shah-alam-kolam-renang",
@@ -1383,29 +1417,21 @@
     "name": "Kolej Kediaman Seroja",
     "shortName": "KK Seroja",
     "coords": [
-      3.0679,
-      101.5063
+      3.069107,
+      101.505845
     ],
     "polygon": [
       [
-        101.506,
-        3.0676
+        101.505588,
+        3.068808
       ],
       [
-        101.5066,
-        3.0676
+        101.506104,
+        3.068809
       ],
       [
-        101.5066,
-        3.0682
-      ],
-      [
-        101.506,
-        3.0682
-      ],
-      [
-        101.506,
-        3.0676
+        101.506103,
+        3.069407
       ]
     ],
     "floors": 5,
@@ -1417,7 +1443,8 @@
       "laundry"
     ],
     "hours": "24 hours",
-    "description": "Student residential college near the main entrance of UiTM Shah Alam."
+    "description": "Student residential college near the main entrance of UiTM Shah Alam.",
+    "osm": "way/312175315"
   },
   {
     "id": "shah-alam-kk-anggerik",
@@ -1425,29 +1452,125 @@
     "name": "Kolej Kediaman Anggerik",
     "shortName": "KK Anggerik",
     "coords": [
-      3.0712,
-      101.4968
+      3.066588,
+      101.493382
     ],
     "polygon": [
       [
-        101.4965,
-        3.0709
+        101.492983,
+        3.06646
       ],
       [
-        101.4971,
-        3.0709
+        101.493231,
+        3.066642
       ],
       [
-        101.4971,
-        3.0715
+        101.493272,
+        3.066586
       ],
       [
-        101.4965,
-        3.0715
+        101.492955,
+        3.066352
       ],
       [
-        101.4965,
-        3.0709
+        101.493046,
+        3.066229
+      ],
+      [
+        101.493335,
+        3.066442
+      ],
+      [
+        101.493313,
+        3.066471
+      ],
+      [
+        101.493355,
+        3.066501
+      ],
+      [
+        101.493432,
+        3.066397
+      ],
+      [
+        101.493471,
+        3.066425
+      ],
+      [
+        101.493512,
+        3.06637
+      ],
+      [
+        101.493827,
+        3.066602
+      ],
+      [
+        101.493864,
+        3.066552
+      ],
+      [
+        101.493915,
+        3.06659
+      ],
+      [
+        101.493772,
+        3.066784
+      ],
+      [
+        101.493563,
+        3.06663
+      ],
+      [
+        101.493602,
+        3.066577
+      ],
+      [
+        101.493473,
+        3.066482
+      ],
+      [
+        101.493454,
+        3.066507
+      ],
+      [
+        101.49343,
+        3.066489
+      ],
+      [
+        101.493386,
+        3.066548
+      ],
+      [
+        101.493415,
+        3.066569
+      ],
+      [
+        101.493395,
+        3.066596
+      ],
+      [
+        101.493708,
+        3.066827
+      ],
+      [
+        101.493622,
+        3.066943
+      ],
+      [
+        101.493332,
+        3.066729
+      ],
+      [
+        101.493351,
+        3.066704
+      ],
+      [
+        101.493291,
+        3.066659
+      ],
+      [
+        101.493197,
+        3.066785
       ]
     ],
     "floors": 5,
@@ -1459,7 +1582,8 @@
       "laundry"
     ],
     "hours": "24 hours",
-    "description": "Student residential college at UiTM Shah Alam."
+    "description": "Student residential college at UiTM Shah Alam.",
+    "osm": "way/312027794"
   },
   {
     "id": "shah-alam-kk-kristal",
@@ -1502,29 +1626,25 @@
     "name": "Kolej Kediaman Meranti",
     "shortName": "KK Meranti",
     "coords": [
-      3.0738,
-      101.4958
+      3.070595,
+      101.507643
     ],
     "polygon": [
       [
-        101.4955,
-        3.0735
+        101.508244,
+        3.070392
       ],
       [
-        101.4961,
-        3.0735
+        101.507492,
+        3.071214
       ],
       [
-        101.4961,
-        3.0741
+        101.507054,
+        3.070778
       ],
       [
-        101.4955,
-        3.0741
-      ],
-      [
-        101.4955,
-        3.0735
+        101.507777,
+        3.069989
       ]
     ],
     "floors": 5,
@@ -1536,7 +1656,8 @@
       "laundry"
     ],
     "hours": "24 hours",
-    "description": "Student residential college at UiTM Shah Alam."
+    "description": "Student residential college at UiTM Shah Alam.",
+    "osm": "way/374087667"
   },
   {
     "id": "shah-alam-kk-teratai",
@@ -1544,29 +1665,61 @@
     "name": "Kolej Kediaman Teratai",
     "shortName": "KK Teratai",
     "coords": [
-      3.0745,
-      101.5005
+      3.069355,
+      101.498611
     ],
     "polygon": [
       [
-        101.5002,
-        3.0742
+        101.49724,
+        3.069254
       ],
       [
-        101.5008,
-        3.0742
+        101.4975,
+        3.069412
       ],
       [
-        101.5008,
-        3.0748
+        101.498529,
+        3.06994
       ],
       [
-        101.5002,
-        3.0748
+        101.499728,
+        3.070387
       ],
       [
-        101.5002,
-        3.0742
+        101.499972,
+        3.070439
+      ],
+      [
+        101.500066,
+        3.070432
+      ],
+      [
+        101.49994,
+        3.070248
+      ],
+      [
+        101.500058,
+        3.069717
+      ],
+      [
+        101.499871,
+        3.069432
+      ],
+      [
+        101.49998,
+        3.068998
+      ],
+      [
+        101.499688,
+        3.068966
+      ],
+      [
+        101.496752,
+        3.068478
+      ],
+      [
+        101.49666,
+        3.068777
       ]
     ],
     "floors": 6,
@@ -1578,7 +1731,8 @@
       "laundry"
     ],
     "hours": "24 hours",
-    "description": "Male residential college (Blok 1–5), 6 floors with capacity of 1,815 students."
+    "description": "Male residential college (Blok 1–5), 6 floors with capacity of 1,815 students.",
+    "osm": "way/1550270731"
   },
   {
     "id": "shah-alam-kk-perindu",
@@ -1586,29 +1740,133 @@
     "name": "Kolej Kediaman Perindu",
     "shortName": "KK Perindu",
     "coords": [
-      3.0755,
-      101.499
+      3.06684,
+      101.500159
     ],
     "polygon": [
       [
-        101.4987,
-        3.0752
+        101.498914,
+        3.067978
       ],
       [
-        101.4993,
-        3.0752
+        101.498512,
+        3.067897
       ],
       [
-        101.4993,
-        3.0758
+        101.498493,
+        3.067828
       ],
       [
-        101.4987,
-        3.0758
+        101.498558,
+        3.067426
       ],
       [
-        101.4987,
-        3.0752
+        101.498756,
+        3.067134
+      ],
+      [
+        101.498762,
+        3.066917
+      ],
+      [
+        101.499193,
+        3.066869
+      ],
+      [
+        101.499317,
+        3.066751
+      ],
+      [
+        101.499298,
+        3.06658
+      ],
+      [
+        101.499673,
+        3.066601
+      ],
+      [
+        101.499698,
+        3.067075
+      ],
+      [
+        101.499971,
+        3.067064
+      ],
+      [
+        101.499944,
+        3.066582
+      ],
+      [
+        101.500124,
+        3.066577
+      ],
+      [
+        101.50014,
+        3.06629
+      ],
+      [
+        101.499821,
+        3.065779
+      ],
+      [
+        101.499786,
+        3.065664
+      ],
+      [
+        101.499802,
+        3.065522
+      ],
+      [
+        101.499899,
+        3.065332
+      ],
+      [
+        101.500129,
+        3.06523
+      ],
+      [
+        101.500497,
+        3.065227
+      ],
+      [
+        101.500631,
+        3.06527
+      ],
+      [
+        101.500752,
+        3.065382
+      ],
+      [
+        101.501229,
+        3.065998
+      ],
+      [
+        101.501615,
+        3.066906
+      ],
+      [
+        101.501503,
+        3.06715
+      ],
+      [
+        101.500942,
+        3.067445
+      ],
+      [
+        101.500706,
+        3.067619
+      ],
+      [
+        101.499995,
+        3.067983
+      ],
+      [
+        101.4997,
+        3.06805
+      ],
+      [
+        101.499419,
+        3.068066
       ]
     ],
     "floors": 5,
@@ -1620,7 +1878,8 @@
       "laundry"
     ],
     "hours": "24 hours",
-    "description": "Male residential college (Blok 1–4), 5 floors with capacity of 2,400 students."
+    "description": "Male residential college (Blok 1–4), 5 floors with capacity of 2,400 students.",
+    "osm": "way/1237626937"
   },
   {
     "id": "shah-alam-kk-delima",
@@ -1704,29 +1963,21 @@
     "name": "Dewan Konsert Seri Budiman",
     "shortName": "Konsert",
     "coords": [
-      3.0662,
-      101.5058
+      3.065962,
+      101.506698
     ],
     "polygon": [
       [
-        101.5056,
-        3.066
+        101.506476,
+        3.066098
       ],
       [
-        101.506,
-        3.066
+        101.506929,
+        3.066081
       ],
       [
-        101.506,
-        3.0664
-      ],
-      [
-        101.5056,
-        3.0664
-      ],
-      [
-        101.5056,
-        3.066
+        101.506919,
+        3.065825
       ]
     ],
     "floors": 2,
@@ -1737,6 +1988,7 @@
       "rehearsal rooms"
     ],
     "hours": "8:00–22:00",
-    "description": "Dedicated concert hall for performing arts events, music performances, and cultural shows."
+    "description": "Dedicated concert hall for performing arts events, music performances, and cultural shows.",
+    "osm": "way/351567486"
   }
 ]
